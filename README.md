@@ -1,4 +1,4 @@
-# Alien::Builder [![Build Status](https://secure.travis-ci.org/plicease/Alien-Builder.png)](http://travis-ci.org/plicease/Alien-Builder)
+# Alien::Builder [![Build Status](https://secure.travis-ci.org/plicease/Alien-Builder.png)](http://travis-ci.org/plicease/Alien-Builder) [![Build status](https://ci.appveyor.com/api/projects/status/1gxa3q2y8q5ts6p6/branch/master?svg=true)](https://ci.appveyor.com/project/plicease/Alien-Builder/branch/master)
 
 Base classes for Alien builder modules
 

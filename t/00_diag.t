@@ -10,6 +10,7 @@ my %modules;
 my $post_diag;
 
 $modules{$_} = $_ for qw(
+  Devel::FindPerl
   ExtUtils::MakeMaker
   File::chdir
   Shell::Config::Generate

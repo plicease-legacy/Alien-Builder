@@ -343,8 +343,9 @@ use base qw( Alien::Builder::Interpolator );
 
 sub new
 {
-  my($class) = @_;
+  my($class, %args) = @_;
   $class->SUPER::new(
     vars => { f => 'foo', b => 'bar' },
+    helpers => $args{helpers},
   );
 }

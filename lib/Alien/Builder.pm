@@ -89,7 +89,6 @@ sub new
 sub _autoconf_configure
 {
   my($self) = @_;
-  $DB::single = 1;
   my $configure = $OS eq 'MSWin32' ? 'sh configure' : './configure';
   $configure .= ' --with-pic' if $self->{config}->{autoconf_with_pic};
   $configure;

@@ -162,10 +162,10 @@ sub _build_dir
 {
   my($self) = @_;
   $self->{build_dir} ||= do {
-    use autodie;
-    mkdir $self->{config}->{build_dir}
-      unless -d $self->{config}->{build_dir};
-    local $CWD = $self->{config}->{build_dir};
+    my $dir = $self->{config}->{build_dir};
+    mkdir($dir) || die "unable to create $dir $!"
+      unless -d $dir;
+    local $CWD = $dir;
     $CWD;
   };
 }

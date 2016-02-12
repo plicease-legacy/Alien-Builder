@@ -7,9 +7,9 @@ subtest simple => sub {
 
   plan tests => 1;
 
-  my $builder = eval { Alien::Builder::CommandList->new };
+  my $cl = eval { Alien::Builder::CommandList->new };
   diag $@ if $@;
-  isa_ok $builder, 'Alien::Builder::CommandList';
+  isa_ok $cl, 'Alien::Builder::CommandList';
 
 };
 
@@ -17,7 +17,7 @@ subtest interpolate => sub {
 
   plan tests => 3;
 
-  my $builder = Alien::Builder::CommandList->new(
+  my $cl = Alien::Builder::CommandList->new(
     [
       '%f is %b',
       [ '%f', 'is', '%b' ],
@@ -27,9 +27,9 @@ subtest interpolate => sub {
     )
   );
   
-  isa_ok $builder, 'Alien::Builder::CommandList';
+  isa_ok $cl, 'Alien::Builder::CommandList';
   
-  my @commands = $builder->interpolate;
+  my @commands = $cl->interpolate;
 
   is_deeply $commands[0], ["foo is bar"], "string interpolation";  
   is_deeply $commands[1], ['foo', 'is', 'bar'], 'list interpolation';
@@ -41,7 +41,7 @@ subtest execute => sub {
 
   my @actual;
   
-  my $builder = Alien::Builder::CommandList->new(
+  my $cl = Alien::Builder::CommandList->new(
     [
       'foo is bar',
       [ 'foo', 'is', 'bar' ],
@@ -51,9 +51,9 @@ subtest execute => sub {
     },
   );
 
-  isa_ok $builder, 'Alien::Builder::CommandList';
+  isa_ok $cl, 'Alien::Builder::CommandList';
   
-  $builder->execute;
+  $cl->execute;
 
   is_deeply $actual[0], ["foo is bar"], "string execute";  
   is_deeply $actual[1], ['foo', 'is', 'bar'], 'list execute';

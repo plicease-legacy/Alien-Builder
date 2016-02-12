@@ -51,6 +51,7 @@ subtest simple => sub {
     
     system 'sh', $config_sh;
     is $?, 0, 'sh compiles it okay';
+    note do { open my $fh, '<', $config_sh; <$fh> } if $?;
   };
 
   subtest 'bat compiles' => sub {

@@ -71,6 +71,7 @@ subtest simple => sub {
     
     system $config_bat, 'force list mode';
     is $?, 0, 'bat syntax okay';
+    note do { open my $fh, '<', $config_sh; <$fh> } if $?;
   };
   
 };

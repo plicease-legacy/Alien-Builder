@@ -2,6 +2,7 @@ package Alien::Builder;
 
 use strict;
 use warnings;
+use 5.008001;
 
 # ABSTRACT: Base classes for Alien builder modules
 # VERSION

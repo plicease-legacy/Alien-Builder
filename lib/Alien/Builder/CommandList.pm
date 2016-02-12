@@ -46,7 +46,7 @@ sub new
 
 =head1 METHODS
 
-=head2 interplate
+=head2 interpolate
 
 =cut
 

@@ -2,6 +2,18 @@
 
 Base classes for Alien builder modules
 
+# SYNOPSIS
+
+# DESCRIPTION
+
+# CONSTRUCTOR
+
+## new
+
+- bin\_requires
+- env
+- msys
+
 # AUTHOR
 
 Graham Ollis &lt;plicease@cpan.org>

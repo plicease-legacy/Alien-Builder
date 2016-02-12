@@ -22,6 +22,8 @@ use 5.008001;
 
 =over 4
 
+=item autoconf_with_pic
+
 =item bin_requires
 
 =item build_commands
@@ -37,6 +39,8 @@ use 5.008001;
 =item interpolator
 
 =item msys
+
+=item name
 
 =item test_commands
 
@@ -60,11 +64,35 @@ sub new
   $args{build_dir}        ||= $BUILD_DIR;
   $args{interpolator}     ||= 'Alien::Builder::Interpolator::Classic';
 
+  $args{autoconf_with_pic} = 1 
+    unless defined $args{autoconf_with_pic};
+
   bless {
     config => {
-      map { $_ => $args{$_} } qw( bin_requires env msys build_commands install_commands test_commands build_dir interpolator ),
+      map { $_ => $args{$_} } qw( 
+        autoconf_with_pic
+        bin_requires
+        build_commands
+        build_dir
+        env
+        helper
+        install_commands
+        interpolator
+        msys
+        name
+        test_commands
+      ),
     },
   }, $class;
+}
+
+sub _autoconf_configure
+{
+  my($self) = @_;
+  $DB::single = 1;
+  my $configure = $OS eq 'MSWin32' ? 'sh configure' : './configure';
+  $configure .= ' --with-pic' if $self->{config}->{autoconf_with_pic};
+  $configure;
 }
 
 sub _interpolator
@@ -79,7 +107,15 @@ sub _interpolator
       $pm .= '.pm';
       require $pm;
     }
-    $class->new;
+    $class->new(
+      vars => {
+        # for compat with AB::MB we do on truthiness,
+        # not definedness
+        n => $self->{config}->{name} || '',
+        s => 'TODO',
+        c => $self->_autoconf_configure,
+      },
+    );
   };
 }
 

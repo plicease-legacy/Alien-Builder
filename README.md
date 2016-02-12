@@ -10,6 +10,7 @@ Base classes for Alien builder modules
 
 ## new
 
+- autoconf\_with\_pic
 - bin\_requires
 - build\_commands
 - build\_dir
@@ -18,6 +19,7 @@ Base classes for Alien builder modules
 - install\_commands
 - interpolator
 - msys
+- name
 - test\_commands
 
 # AUTHOR

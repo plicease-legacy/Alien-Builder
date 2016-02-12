@@ -5,7 +5,7 @@ use File::chdir;
 use Alien::Builder;
 use File::Temp qw( tempdir );
 use Config;
-use Test::More tests => 9;
+use Test::More tests => 11;
 
 $Alien::Builder::BUILD_DIR = tempdir( CLEANUP => 1 );
 
@@ -334,6 +334,50 @@ subtest 'env' => sub {
     is $builder->_env->{BAR}, undef, 'BAR=undef';
   
   };
+
+};
+
+subtest name => sub {
+  plan tests => 2;
+
+  subtest default => sub {
+    plan tests => 1;
+  
+    my $builder = Alien::Builder->new;
+    
+    is $builder->_interpolator->interpolate('%n'), '', '%n is empty string';
+  
+  };
+  
+  subtest 'with value' => sub {
+    plan tests => 1;
+
+    my $builder = Alien::Builder->new( name => 'foo' );
+    
+    is $builder->_interpolator->interpolate('%n'), 'foo', '%n is foo'
+
+  };
+
+};
+
+subtest '%c' => sub {
+
+  subtest default => sub {
+  
+    subtest 'unix like' => sub {
+      local $Alien::Builder::OS = 'linux';
+      my $builder = Alien::Builder->new;  
+      is $builder->_interpolator->interpolate('%c'), './configure --with-pic', 'is ./configure --with-pic';
+    };
+    
+    subtest 'windows' => sub {
+      local $Alien::Builder::OS = 'MSWin32';
+      my $builder = Alien::Builder->new;  
+      is $builder->_interpolator->interpolate('%c'), 'sh configure --with-pic', 'is sh configure --with-pic';
+    };
+  
+  };
+
 
 };
 

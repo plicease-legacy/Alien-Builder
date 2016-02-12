@@ -8,7 +8,7 @@ use Env qw( @PATH $FOO );
 
 subtest simple => sub {
 
-  plan tests => 7;
+  plan tests => 8;
 
   my $log = Alien::Builder::EnvLog->new;
   
@@ -51,6 +51,18 @@ subtest simple => sub {
     
     system 'sh', $config_sh;
     is $?, 0, 'sh compiles it okay';
+  };
+
+  subtest 'bat compiles' => sub {
+    plan skip_all => 'Test requires windows' unless $^O eq 'MSWin32';
+    plan skip_all => 'Test requires Shell::Config::Generate and Shell::Guess'
+      unless $INC{'Shell/Config/Generate.pm'} && $INC{'Shell/Guess.pm'};
+    
+    my $config_bat = File::Spec->catfile($dir, 'env.bat');
+    ok -r $config_bat, "exists: $config_bat";
+    
+    system $config_bat, 'force list mode';
+    is $?, 0, 'bat syntax okay';
   };
   
 };

@@ -228,6 +228,7 @@ subtest 'env' => sub {
   plan tests => 4;
 
   subtest default => sub {
+    local $Alien::Builder::OS = 'linux';
   
     my $builder = Alien::Builder->new;
 

@@ -37,7 +37,7 @@ sub new
   $vars{p} = $Alien::Builder::OS eq 'MSWin32' ? '' : './';
   my $perl = Devel::FindPerl::find_perl_interpreter();
   $vars{x} = $perl;
-  $perl =~ s{\\}{/} if $Alien::Builder::OS eq 'MSWin32';
+  $perl =~ s{\\}{/}g if $Alien::Builder::OS eq 'MSWin32';
   $vars{X} = $perl;
     
   $args{vars} = \%vars;

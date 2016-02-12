@@ -26,6 +26,7 @@ sub new
   
   bless {
     env => {},
+    unset => [],
     shell_config_generate => eval {
       require Shell::Config::Generate;
       require Shell::Guess;
@@ -80,6 +81,29 @@ sub set
   $self;
 }
 
+=head2 unset
+
+=cut
+
+sub unset
+{
+  my($self, $name) = @_;
+
+  if(my $config = $self->{shell_config_generate})
+  {
+    # TODO: add this feature to Shell::Config::Generate
+    $config->comment(
+      "The environment variable $name should be unset",
+      "But Shell::Config::Generate does not current support that",
+    );
+  }
+
+  delete $self->{env}->{$name};
+  push @{ $self->{unset} }, $name;
+  
+  $self;
+}
+
 =head2 write_log
 
 =cut
@@ -115,7 +139,17 @@ sub write_log
   
   my $filename = File::Spec->catfile($dir, 'env.pl');
   open my $fh, '>', $filename;
-  print $fh Data::Dumper->new([$self->{env}], ['*ENV'])->Dump;
+  foreach my $name (sort keys %{ $self->{env} })
+  {
+    my $value = $self->{env}->{$name};
+    print $fh "\$ENV{$name} = ",
+      Data::Dumper->new([$value])->Terse(1)->Dump,
+      ';';
+  }
+  foreach my $name (@{ $self->{unset} })
+  {
+    print $fh "delete \$ENV{$name};\n";
+  }
   if($^O eq 'MSWin32')
   {
     print $fh 'system("command.com");', "\n";

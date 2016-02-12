@@ -11,7 +11,11 @@ my $post_diag;
 
 $modules{$_} = $_ for qw(
   ExtUtils::MakeMaker
+  File::chdir
+  Shell::Config::Generate
+  Shell::Guess
   Test::More
+  autodie
 );
 
 

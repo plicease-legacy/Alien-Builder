@@ -11,8 +11,14 @@ Base classes for Alien builder modules
 ## new
 
 - bin\_requires
+- build\_commands
+- build\_dir
 - env
+- helper
+- install\_commands
+- interpolator
 - msys
+- test\_commands
 
 # AUTHOR
 

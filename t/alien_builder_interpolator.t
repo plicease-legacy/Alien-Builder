@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 3;
+use Test::More tests => 4;
 use Alien::Builder::Interpolator;
 
 subtest 'create simple' => sub {
@@ -35,5 +35,14 @@ subtest 'helper' => sub {
   is $itr->interpolate("hi %{ab} there"), "hi abbc there", 'simple helper';
   is $itr->interpolate("hi %{ab} %{p2} there"), "hi abbc %{ab} there", "helper with %{}";
   is $itr->interpolate("hi %{ab} %{p3} %a there"), "hi abbc %a abc there", 'helper with %.';
+
+};
+
+subtest undef => sub {
+  plan tests => 1;
+  
+  my $itr = Alien::Builder::Interpolator->new;
+  
+  is $itr->interpolate(undef), undef, 'undef => undef';
 
 };

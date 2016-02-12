@@ -4,7 +4,7 @@ use Alien::Builder::EnvLog;
 use Test::More tests => 1;
 use File::Spec;
 use File::Temp qw( tempdir );
-use Env qw( @PATH $FOO );
+use Env qw( @PATH $FOO $BAR $BAZ );
 
 subtest simple => sub {
 
@@ -20,6 +20,8 @@ subtest simple => sub {
   eval { $log->set( FOO => 'bar' ) };
   is $@, '', 'set';
   
+  eval { $log->unset( 'BAZ' ) };
+  
   my $dir = tempdir( CLEANUP => 1 );
   
   eval { $log->write_log($dir) };
@@ -30,15 +32,20 @@ subtest simple => sub {
   my $pl = do { open my $fh, '<', $config_pl; local $/; <$fh> };
   
   subtest 'perl populates values' => sub {
-    plan tests => 3;
+    plan tests => 5;
     local %ENV = %ENV;
     no warnings 'once';
-    local *CORE::GLOBAL::system = sub {};
+    local *CORE::GLOBAL::system = sub { };
+    $ENV{BAR} = 'something';
+    $ENV{BAZ} = 'what now?';
     eval $pl;
+    #note $pl;
     is $@, '', 'generated perl compiles';
     diag $pl if $@;
     is $FOO, 'bar', 'FOO=bar';
+    is $BAR, 'something', 'BAR=something';
     is $PATH[0], '/foo/bar', 'PATH[0] = /foo/bar';
+    is $BAZ, undef, 'BAZ is not defined';
   };
 
   subtest 'sh compiles' => sub {

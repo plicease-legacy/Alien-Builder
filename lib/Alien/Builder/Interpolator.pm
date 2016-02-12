@@ -79,7 +79,7 @@ sub _execute_helper
 sub interpolate
 {
   my($self, $string) = @_;
-  $string =~ s/\%(\{[a-zA-Z_][a-zA-Z_0-9]+\}|.)/$self->_sub($1)/eg;
+  $string =~ s/\%(\{[a-zA-Z_][a-zA-Z_0-9]+\}|.)/$self->_sub($1)/eg if defined $string;
   $string;
 }
 

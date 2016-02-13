@@ -65,6 +65,8 @@ subtest simple => sub {
     plan skip_all => 'Test requires windows' unless $^O eq 'MSWin32';
     plan skip_all => 'Test requires Shell::Config::Generate and Shell::Guess'
       unless $INC{'Shell/Config/Generate.pm'} && $INC{'Shell/Guess.pm'};
+      
+    local @PATH = map { Win32::GetShortPathName($_) } grep { -d $_ } @PATH;
     
     my $config_bat = File::Spec->catfile($dir, 'env.bat');
     ok -r $config_bat, "exists: $config_bat";

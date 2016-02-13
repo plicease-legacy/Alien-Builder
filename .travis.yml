@@ -5,6 +5,7 @@ install:
   - perlbrew list
   - dzil authordeps --missing | cpanm -n
   - dzil listdeps   --missing | cpanm -n
+  - perl corpus/server.pl
 
 perl:
   - "5.8"
@@ -18,3 +19,6 @@ perl:
 
 script:
   - dzil test -v
+
+env:
+  - ALIEN_BUILDER_LIVE_TEST=4701:4702

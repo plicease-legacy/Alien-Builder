@@ -9,6 +9,8 @@ pod_spelling_system:
     - interpolator
     - env
     - msys
+    - downloader
+    - localfile
 
 pod_coverage:
   skip: 0

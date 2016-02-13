@@ -10,12 +10,19 @@ my %modules;
 my $post_diag;
 
 $modules{$_} = $_ for qw(
+  Capture::Tiny
   Devel::FindPerl
   ExtUtils::MakeMaker
+  FFI::CheckLib
   File::chdir
+  HTML::Parser
+  HTTP::Tiny
+  Net::FTP
   Shell::Config::Generate
   Shell::Guess
   Test::More
+  Text::ParseWords
+  URI
 );
 
 

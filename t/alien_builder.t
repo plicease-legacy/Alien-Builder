@@ -219,7 +219,7 @@ subtest 'interpolator' => sub {
 
   my $intr = Alien::Builder->new->_interpolator;
   
-  isa_ok $intr, 'Alien::Builder::Interpolator::Classic';
+  isa_ok $intr, 'Alien::Builder::Interpolator::Default';
   isa_ok $intr, 'Alien::Builder::Interpolator';
 
 };

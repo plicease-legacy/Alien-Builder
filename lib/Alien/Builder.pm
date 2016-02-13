@@ -62,7 +62,7 @@ sub new
   $args{install_commands} ||= [ 'make install' ];
   $args{test_commands}    ||= [];
   $args{build_dir}        ||= $BUILD_DIR;
-  $args{interpolator}     ||= 'Alien::Builder::Interpolator::Classic';
+  $args{interpolator}     ||= 'Alien::Builder::Interpolator::Default';
 
   $args{autoconf_with_pic} = 1 
     unless defined $args{autoconf_with_pic};

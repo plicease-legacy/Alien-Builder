@@ -2,6 +2,11 @@ use strict;
 use warnings;
 use File::Which qw( which );
 
+if($] < 5.010)
+{
+  exit;
+}
+
 die "set ALIEN_BUILDER_LIVE_TEST" unless defined $ENV{ALIEN_BUILDER_LIVE_TEST};
 
 my($http_port, $ftp_port) = split /:/, $ENV{ALIEN_BUILDER_LIVE_TEST};

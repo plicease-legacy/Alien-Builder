@@ -11,6 +11,7 @@ use URI::file;
 # will start the FTP and HTTP servers that this test
 # can use.
 
+plan skip_all => 'test requires Perl 5.10 or better' if $] < 5.010;
 plan skip_all => 'live test, set ALIEN_BUILDER_LIVE_TEST'
   unless $ENV{ALIEN_BUILDER_LIVE_TEST};
 my(undef, $port) = split /:/, $ENV{ALIEN_BUILDER_LIVE_TEST};

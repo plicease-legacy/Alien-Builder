@@ -5,7 +5,7 @@ use File::chdir;
 use Alien::Builder;
 use File::Temp qw( tempdir );
 use Config;
-use Test::More tests => 16;
+use Test::More tests => 17;
 
 $Alien::Builder::BUILD_DIR = tempdir( CLEANUP => 1 );
 
@@ -429,6 +429,34 @@ subtest arch => sub {
     plan tests => 1;
     my $builder = Alien::Builder->new( arch => 1 );
     is !!$builder->alien_prop_arch, 1, 'arch is on';
+  };
+
+};
+
+subtest ffi_name => sub {
+  plan tests => 3;
+
+  subtest default => sub {
+    plan tests => 1;
+    my $builder = Alien::Builder->new;
+    is $builder->alien_prop_ffi_name, '', 'default is ""';
+  };
+  
+  subtest 'defer to pkg_config name' => sub {
+    plan tests => 1;
+    my $builder = Alien::Builder->new(
+      name => 'foobar',
+    );
+    is $builder->alien_prop_ffi_name, 'foobar', 'default to alien_prop_name';
+  };
+
+  subtest 'override pkg_config name' => sub {
+    plan tests => 1;
+    my $builder = Alien::Builder->new(
+      name => 'foobar',
+      ffi_name => 'baz',
+    );
+    is $builder->alien_prop_ffi_name, 'baz', 'default to alien_prop_name';
   };
 
 };

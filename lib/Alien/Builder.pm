@@ -36,6 +36,8 @@ use 5.008001;
 
 =item env
 
+=item ffi_name
+
 =item helper
 
 =item install_commands
@@ -218,6 +220,16 @@ sub alien_prop_env
     $config->write_log($self->alien_prop_build_dir);
     
     \%env;
+  };
+}
+
+sub alien_prop_ffi_name
+{
+  my($self) = @_;
+  $self->{ffi_name} ||= do {
+    my $name = $self->{config}->{ffi_name};
+    $name = $self->alien_prop_name unless defined $name;
+    $name;
   };
 }
 

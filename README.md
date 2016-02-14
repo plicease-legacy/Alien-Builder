@@ -16,7 +16,9 @@ Base classes for Alien builder modules
 - build\_commands
 - build\_dir
 - env
+- ffi\_name
 - helper
+- inline\_auto\_include
 - install\_commands
 - interpolator
 - msys

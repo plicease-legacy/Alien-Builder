@@ -5,7 +5,7 @@ use File::chdir;
 use Alien::Builder;
 use File::Temp qw( tempdir );
 use Config;
-use Test::More tests => 17;
+use Test::More tests => 18;
 
 $Alien::Builder::BUILD_DIR = tempdir( CLEANUP => 1 );
 
@@ -457,6 +457,20 @@ subtest ffi_name => sub {
       ffi_name => 'baz',
     );
     is $builder->alien_prop_ffi_name, 'baz', 'default to alien_prop_name';
+  };
+
+};
+
+subtest inline_auto_include => sub {
+  
+  subtest default => sub {
+    my $builder = Alien::Builder->new;
+    is_deeply $builder->alien_prop_inline_auto_include, [], 'default is empty list';
+  };
+
+  subtest default => sub {
+    my $builder = Alien::Builder->new( inline_auto_include => ['-I/foo', '-I/bar'] );
+    is_deeply $builder->alien_prop_inline_auto_include, [qw( -I/foo -I/bar )], 'with values';
   };
 
 };

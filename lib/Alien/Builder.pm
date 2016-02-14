@@ -40,6 +40,8 @@ use 5.008001;
 
 =item helper
 
+=item inline_auto_include
+
 =item install_commands
 
 =item interpolator
@@ -244,10 +246,18 @@ sub alien_prop_helper
   };
 }
 
+sub alien_prop_inline_auto_include
+{
+  my($self) = @_;
+  $self->{inline_auto_include} ||= do {
+    my @iai = @{ $self->{config}->{inline_auto_include} || [] };
+    \@iai;
+  };
+}
+
 sub alien_prop_install_commands
 {
   my($self) = @_;
-  
   $self->{install_commands} ||= do {
     my @commands = @{ $self->{config}->{install_commands} || [ 'make install' ] };
     Alien::Builder::CommandList->new(

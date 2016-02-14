@@ -5,7 +5,7 @@ use File::chdir;
 use Alien::Builder;
 use File::Temp qw( tempdir );
 use Config;
-use Test::More tests => 20;
+use Test::More tests => 21;
 
 $Alien::Builder::BUILD_DIR = tempdir( CLEANUP => 1 );
 
@@ -417,7 +417,9 @@ subtest test_commands => sub {
 };
 
 subtest arch => sub {
-  plan tests => 2;
+  plan tests => 3;
+
+  delete $ENV{ALIEN_ARCH};
 
   subtest default => sub {
     plan tests => 1;
@@ -425,6 +427,14 @@ subtest arch => sub {
     is !!$builder->alien_prop_arch, '', 'arch is off by default';  
   };
   
+  $ENV{ALIEN_ARCH} = 1;
+  
+  subtest 'env override' => sub {
+    plan tests => 1;
+    my $builder = Alien::Builder->new;
+    is !!$builder->alien_prop_arch, 1, 'arch is on by default';  
+  };
+
   subtest override => sub {
     plan tests => 1;
     my $builder = Alien::Builder->new( arch => 1 );
@@ -516,6 +526,23 @@ subtest 'provides cflags libs' => sub {
     my $builder = Alien::Builder->new( provides_cflags => '-DFOO', provides_libs => '-lfoo' );
     is $builder->alien_prop_provides_cflags, '-DFOO', 'cflags undef';
     is $builder->alien_prop_provides_libs, '-lfoo', 'libs undef';
+  };
+
+};
+
+subtest version_check => sub {
+  plan tests => 2;
+  
+  subtest default => sub {
+    plan tests => 1;
+    my $builder = Alien::Builder->new;
+    is $builder->alien_prop_version_check, '%{pkg_config} --modversion %n', 'has default value';
+  };
+
+  subtest 'with value' => sub {
+    plan tests => 1;
+    my $builder = Alien::Builder->new( version_check => 'foo --bar' );
+    is $builder->alien_prop_version_check, 'foo --bar', 'override';
   };
 
 };

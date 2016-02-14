@@ -46,6 +46,8 @@ Base classes for Alien builder modules
 
 ## test\_commands
 
+## version\_check
+
 # AUTHOR
 
 Graham Ollis &lt;plicease@cpan.org>

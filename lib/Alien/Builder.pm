@@ -67,7 +67,11 @@ sub new
 sub alien_prop_arch
 {
   my($self) = @_;
-  !!$self->{config}->{arch};
+  $self->{arch} ||= do {
+    my $arch = $self->{config}->{arch};
+    $arch = $ENV{ALIEN_ARCH} unless defined $arch;
+    !!$arch;
+  };
 }
 
 =head2 autoconf_with_pic
@@ -376,7 +380,17 @@ sub alien_prop_test_commands
   };
 }
 
-# Private properties.
+=head2 version_check
+
+=cut
+
+sub alien_prop_version_check
+{
+  my($self) = @_;
+  $self->{config}->{version_check} || '%{pkg_config} --modversion %n';
+}
+
+# Private properties and methods
 
 sub _autoconf
 {

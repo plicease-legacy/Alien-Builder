@@ -305,6 +305,20 @@ sub alien_prop_interpolator
   };
 }
 
+=head2 isolate_dynamic
+
+=cut
+
+sub alien_prop_isolate_dynamic
+{
+  my($self) = @_;
+  $self->{isolate_dynamic} ||= do {
+    my $id = $self->{config}->{isolate_dynamic};
+    $id = 1 unless defined $id;
+    $id;
+  };
+}
+
 =head2 msys
 
 =cut

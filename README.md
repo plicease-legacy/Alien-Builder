@@ -34,6 +34,8 @@ Base classes for Alien builder modules
 
 ## interpolator
 
+## isolate\_dynamic
+
 ## msys
 
 ## name

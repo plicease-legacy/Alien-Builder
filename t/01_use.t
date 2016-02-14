@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 11;
+use Test::More tests => 12;
 
 use_ok 'Alien::Builder';
 use_ok 'Alien::Builder::CommandList';
@@ -11,5 +11,6 @@ use_ok 'Alien::Builder::Download::Plugin::HTTPTiny';
 use_ok 'Alien::Builder::Download::Plugin::Local';
 use_ok 'Alien::Builder::Download::Plugin::NetFTP';
 use_ok 'Alien::Builder::EnvLog';
+use_ok 'Alien::Builder::Extractor::Plugin::ArchiveTar';
 use_ok 'Alien::Builder::Interpolator';
 use_ok 'Alien::Builder::Interpolator::Classic';

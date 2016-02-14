@@ -5,7 +5,7 @@ use File::chdir;
 use Alien::Builder;
 use File::Temp qw( tempdir );
 use Config;
-use Test::More tests => 23;
+use Test::More tests => 22;
 use Capture::Tiny qw( capture );
 
 $Alien::Builder::BUILD_DIR = tempdir( CLEANUP => 1 );
@@ -559,15 +559,15 @@ subtest alien_do_system => sub {
   is $r{stdout}, 'bar', 'stdout=bar';
   is !!$r{success}, 1, 'success=1';
 
-  (undef, undef, %r) = capture { $builder->alien_do_system('%X', -E => 'print $ARGV[0]', '%{foo}') };
+  (undef, undef, %r) = capture { $builder->alien_do_system('%X', -e => 'print $ARGV[0]', '%{foo}') };
   is $r{stdout}, 'bar2', 'stdout=bar2';
   is !!$r{success}, 1, 'success=1';
 
-  (undef, undef, %r) = capture { $builder->alien_do_system('%X', -E => 'print STDERR "stuff"') };
+  (undef, undef, %r) = capture { $builder->alien_do_system('%X', -e => 'print STDERR "stuff"') };
   is $r{stderr}, 'stuff', 'stderr=stuff';
   is !!$r{success}, 1, 'success=1';
 
-  (undef, undef, %r) = capture { $builder->alien_do_system('%X', -E => 'exit 2') };
+  (undef, undef, %r) = capture { $builder->alien_do_system('%X', -e => 'exit 2') };
   is !!$r{success}, '', 'success=0';
 };
 

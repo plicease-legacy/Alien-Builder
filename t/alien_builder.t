@@ -5,7 +5,7 @@ use File::chdir;
 use Alien::Builder;
 use File::Temp qw( tempdir );
 use Config;
-use Test::More tests => 11;
+use Test::More tests => 12;
 
 $Alien::Builder::BUILD_DIR = tempdir( CLEANUP => 1 );
 
@@ -378,6 +378,18 @@ subtest '%c' => sub {
   
   };
 
+
+};
+
+subtest helper => sub {
+  plan tests => 1;
+
+  my $builder = Alien::Builder->new(
+    helper => { foo => '"abc" . "def"' },
+  );
+  
+  my $string = $builder->_interpolator->interpolate('%{foo}');
+  is $string, 'abcdef', 'used heler';
 
 };
 

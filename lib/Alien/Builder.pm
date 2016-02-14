@@ -59,7 +59,6 @@ sub new
 {
   my($class, %args) = @_;  
 
-  $args{$_} ||= {} for qw( bin_requires env helper );
   $args{build_commands}   ||= [ '%c --prefix=%s', 'make' ];
   $args{install_commands} ||= [ 'make install' ];
   $args{test_commands}    ||= [];
@@ -86,6 +85,8 @@ sub new
   }, $class;
 }
 
+# public properties
+
 sub _arch
 {
   my($self) = @_;
@@ -95,9 +96,11 @@ sub _arch
 sub _autoconf_with_pic
 {
   my($self) = @_;
-  $self->{config}->{autoconf_with_pic} = 1 
-    unless defined $self->{config}->{autoconf_with_pic};
-  !!$self->{config}->{autoconf_with_pic};
+  $self->{autoconf_with_pic} ||= do {
+    my $acwp = $self->{config}->{autoconf_with_pic};
+    $acwp = 1 unless defined $acwp;
+    $acwp;
+  };
 }
 
 sub _bin_requires
@@ -105,7 +108,7 @@ sub _bin_requires
   my($self) = @_;
   
   $self->{bin_requires} ||= do {
-    my %bin_requires = %{ $self->{config}->{bin_requires} };
+    my %bin_requires = %{ $self->{config}->{bin_requires} || {} };
     
     $bin_requires{'Alien::MSYS'} ||= 0 if $self->_msys && $OS eq 'MSWin32';
     
@@ -192,7 +195,7 @@ sub _env
       $env{CONFIG_SITE} = $config_site;
     }
     
-    foreach my $key (sort keys %{ $self->{config}->{env} })
+    foreach my $key (sort keys %{ $self->{config}->{env} || {} })
     {
       my $value = $self->_interpolator->interpolate( $self->{config}->{env}->{$key} );
       $env{$key} = $value;
@@ -214,7 +217,12 @@ sub _env
 
 sub _helper
 {
-  # TODO
+  my($self) = @_;
+  $self->{helper} ||= do {
+    my %helper = %{ $self->{config}->{helper} || {} };
+    # TODO: provide the pkg_config helper
+    \%helper;
+  };
 }
 
 sub _install_commands
@@ -238,10 +246,11 @@ sub _interpolator
       vars => {
         # for compat with AB::MB we do on truthiness,
         # not definedness
-        n => $self->{config}->{name} || '',
+        n => $self->_name,
         s => 'TODO',
         c => $self->_autoconf_configure,
       },
+      helpers => $self->_helper,
     );
   };
 }
@@ -257,7 +266,8 @@ sub _msys
 
 sub _name
 {
-  # TODO
+  my($self) = @_;
+  $self->{name} ||= $self->{config}->{name} || '';
 }
 
 sub _test_commands
@@ -265,7 +275,7 @@ sub _test_commands
   # TODO
 }
 
-#
+# private stuff
 
 sub _autoconf
 {

@@ -25,6 +25,9 @@ sub extract
   my(undef, $download, $dir) = @_;
   
   my $tarball = $download->copy_to($dir);
+
+  local $Archive::Tar::RESOLVE_SYMLINK = $Archive::Tar::RESOLVE_SYMLINK;
+  $Archive::Tar::RESOLVE_SYMLINK = 'none' if $^O eq 'MSWin32';
   
   my $tar = Archive::Tar->new;
   $tar->read($tarball);
@@ -53,7 +56,11 @@ sub extract
   local $CWD = $dir;  
   foreach my $file ($tar->get_files)
   {
-    my $ok = $file->extract;
+    # ignore errors extracting symlinks on windows.
+    # TODO: figure out a better way to handle this.
+    # it is still rather noisy.
+    my $ok = $file->is_symlink && $^O eq 'MSWin32'
+      ? $file->extract || 1 : $file->extract;
     die "unable to extract @{[ $file->full_path ]}" unless $ok;
   }
 

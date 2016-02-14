@@ -34,9 +34,12 @@ subtest 'with bogus symlink' => sub {
   );
   
   my $dir = tempdir( CLEANUP => 1 );
-  my $root = Alien::Builder::Extractor::Plugin::ArchiveTar->extract(
-    $download => $dir,
-  );
+  my $root = eval { 
+    Alien::Builder::Extractor::Plugin::ArchiveTar->extract(
+      $download => $dir,
+    );
+  };
+  diag $@ if $@;
   
   ok -d $root, "root = $root";
   

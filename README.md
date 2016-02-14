@@ -10,20 +10,35 @@ Base classes for Alien builder modules
 
 ## new
 
-- arch
-- autoconf\_with\_pic
-- bin\_requires
-- build\_commands
-- build\_dir
-- env
-- ffi\_name
-- helper
-- inline\_auto\_include
-- install\_commands
-- interpolator
-- msys
-- name
-- test\_commands
+# PROPERTIES
+
+## arch
+
+## autoconf\_with\_pic
+
+## bin\_requires
+
+## build\_commands
+
+## build\_dir
+
+## env
+
+## ffi\_name
+
+## helper
+
+## inline\_auto\_include
+
+## install\_commands
+
+## interpolator
+
+## msys
+
+## name
+
+## test\_commands
 
 # AUTHOR
 

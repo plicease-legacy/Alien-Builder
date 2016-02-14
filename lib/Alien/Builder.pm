@@ -22,38 +22,6 @@ use 5.008001;
 
 =head2 new
 
-=over 4
-
-=item arch
-
-=item autoconf_with_pic
-
-=item bin_requires
-
-=item build_commands
-
-=item build_dir
-
-=item env
-
-=item ffi_name
-
-=item helper
-
-=item inline_auto_include
-
-=item install_commands
-
-=item interpolator
-
-=item msys
-
-=item name
-
-=item test_commands
-
-=back
-
 =cut
 
 # these are mainly for testing, and
@@ -90,11 +58,21 @@ sub new
 # - only this method should read from the config hash, everything else should
 #   go through the property method
 
+=head1 PROPERTIES
+
+=head2 arch
+
+=cut
+
 sub alien_prop_arch
 {
   my($self) = @_;
   !!$self->{config}->{arch};
 }
+
+=head2 autoconf_with_pic
+
+=cut
 
 sub alien_prop_autoconf_with_pic
 {
@@ -105,6 +83,10 @@ sub alien_prop_autoconf_with_pic
     $acwp;
   };
 }
+
+=head2 bin_requires
+
+=cut
 
 sub alien_prop_bin_requires
 {
@@ -119,6 +101,10 @@ sub alien_prop_bin_requires
   };
 }
 
+=head2 build_commands
+
+=cut
+
 sub alien_prop_build_commands
 {
   my($self) = @_;
@@ -131,6 +117,10 @@ sub alien_prop_build_commands
   };
 }
 
+=head2 build_dir
+
+=cut
+
 sub alien_prop_build_dir
 {
   my($self) = @_;
@@ -142,6 +132,10 @@ sub alien_prop_build_dir
     $CWD;
   };
 }
+
+=head2 env
+
+=cut
 
 sub alien_prop_env
 {
@@ -225,6 +219,10 @@ sub alien_prop_env
   };
 }
 
+=head2 ffi_name
+
+=cut
+
 sub alien_prop_ffi_name
 {
   my($self) = @_;
@@ -234,6 +232,10 @@ sub alien_prop_ffi_name
     $name;
   };
 }
+
+=head2 helper
+
+=cut
 
 sub alien_prop_helper
 {
@@ -246,6 +248,10 @@ sub alien_prop_helper
   };
 }
 
+=head2 inline_auto_include
+
+=cut
+
 sub alien_prop_inline_auto_include
 {
   my($self) = @_;
@@ -254,6 +260,10 @@ sub alien_prop_inline_auto_include
     \@iai;
   };
 }
+
+=head2 install_commands
+
+=cut
 
 sub alien_prop_install_commands
 {
@@ -265,6 +275,10 @@ sub alien_prop_install_commands
     );
   };
 }
+
+=head2 interpolator
+
+=cut
 
 sub alien_prop_interpolator
 {
@@ -291,6 +305,10 @@ sub alien_prop_interpolator
   };
 }
 
+=head2 msys
+
+=cut
+
 sub alien_prop_msys
 {
   my($self) = @_;
@@ -300,11 +318,19 @@ sub alien_prop_msys
   };
 }
 
+=head2 name
+
+=cut
+
 sub alien_prop_name
 {
   my($self) = @_;
   $self->{name} ||= $self->{config}->{name} || '';
 }
+
+=head2 test_commands
+
+=cut
 
 sub alien_prop_test_commands
 {
@@ -318,7 +344,7 @@ sub alien_prop_test_commands
   };
 }
 
-# private stuff
+# Private properties.
 
 sub _autoconf
 {
@@ -346,6 +372,8 @@ sub _env_log
   $self->alien_prop_env;
   $self->{env_log};
 }
+
+# private methods
 
 sub _catfile
 {

@@ -4,6 +4,7 @@ use strict;
 use warnings;
 use Config;
 use Alien::Builder::EnvLog;
+use Alien::Builder::CommandList;
 use Env qw( @PATH );
 use File::chdir;
 use Text::ParseWords qw( shellwords );
@@ -59,12 +60,6 @@ sub new
 {
   my($class, %args) = @_;  
 
-  $args{build_commands}   ||= [ '%c --prefix=%s', 'make' ];
-  $args{install_commands} ||= [ 'make install' ];
-  $args{test_commands}    ||= [];
-  $args{build_dir}        ||= $BUILD_DIR;
-  $args{interpolator}     ||= 'Alien::Builder::Interpolator::Default';
-
   bless {
     config => {
       map { $_ => $args{$_} } qw( 
@@ -86,6 +81,20 @@ sub new
 }
 
 # public properties
+# - properties are specified by the caller by passing in a key/value pairs
+#   to the constructor.  The values should be strings, lists or hash references
+#   no sub references and no objects
+# - these are stored by the constuctor in the "config" hash.
+# - the "config" hash is read only, nothing should EVER write to it.
+# - You should be able to save the "config" has to a .json file and reconstitute
+#   the builder object from that.
+# - the actual value of the property is defined by a method which takes the raw
+#   "config" hash values, applies any default values if they properties haven't
+#   been provided, and turns the value into the thing which is actually used.
+# - "thing" in this case can be either a primitive (string, hash, etc) or an
+#   object.
+# - only this method should read from the config hash, everything else should
+#   go through the property method
 
 sub _arch
 {
@@ -118,14 +127,21 @@ sub _bin_requires
 
 sub _build_commands
 {
-  # TODO
+  my($self) = @_;
+  
+  $self->{build_commands} ||= do {
+    my @commands = @{ $self->{config}->{build_commands} || [ '%c --prefix=%s', 'make' ] };
+    Alien::Builder::CommandList->new(
+      \@commands, interpolator => $self->_interpolator,
+    );
+  };
 }
 
 sub _build_dir
 {
   my($self) = @_;
   $self->{build_dir} ||= do {
-    my $dir = $self->{config}->{build_dir};
+    my $dir = $self->{config}->{build_dir} || $BUILD_DIR;
     mkdir($dir) || die "unable to create $dir $!"
       unless -d $dir;
     local $CWD = $dir;
@@ -227,14 +243,21 @@ sub _helper
 
 sub _install_commands
 {
-  # TODO
+  my($self) = @_;
+  
+  $self->{install_commands} ||= do {
+    my @commands = @{ $self->{config}->{install_commands} || [ 'make install' ] };
+    Alien::Builder::CommandList->new(
+      \@commands, interpolator => $self->_interpolator,
+    );
+  };
 }
 
 sub _interpolator
 {
   my($self) = @_;
   $self->{interpolator} ||= do {
-    my $class = $self->{config}->{interpolator};
+    my $class = $self->{config}->{interpolator} || 'Alien::Builder::Interpolator::Default';
     unless($class->can('new'))
     {
       my $pm = $class;
@@ -272,7 +295,14 @@ sub _name
 
 sub _test_commands
 {
-  # TODO
+  my($self) = @_;
+  
+  $self->{test_commands} ||= do {
+    my @commands = @{ $self->{config}->{test_commands} || [] };
+    Alien::Builder::CommandList->new(
+      \@commands, interpolator => $self->_interpolator,
+    );
+  };
 }
 
 # private stuff
@@ -283,8 +313,9 @@ sub _autoconf
   $self->{autoconf} ||= do {
     !!grep /(?<!\%)\%c/, 
       map { ref $_ ? @$_ : $_ }
-      map { @{ $self->{config}->{$_} } }
-      qw( build_commands install_commands test_commands );
+      map { $_->raw }
+      map { $self->$_ }
+      qw( _build_commands _install_commands _test_commands );
   };
 }
 

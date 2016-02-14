@@ -85,4 +85,14 @@ sub execute
   }
 }
 
+=head2 raw
+
+=cut
+
+sub raw
+{
+  my($self) = @_;
+  map { ref $_ ? $_ : [$_] } @{ $self->{command_list} }
+}
+
 1;

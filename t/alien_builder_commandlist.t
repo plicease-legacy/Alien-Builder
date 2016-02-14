@@ -13,9 +13,9 @@ subtest simple => sub {
 
 };
 
-subtest interpolate => sub {
+subtest 'interpolate and raw'=> sub {
 
-  plan tests => 3;
+  plan tests => 5;
 
   my $cl = Alien::Builder::CommandList->new(
     [
@@ -33,6 +33,11 @@ subtest interpolate => sub {
 
   is_deeply $commands[0], ["foo is bar"], "string interpolation";  
   is_deeply $commands[1], ['foo', 'is', 'bar'], 'list interpolation';
+  
+  @commands = $cl->raw;
+  
+  is_deeply $commands[0], ['%f is %b'], 'string raw';
+  is_deeply $commands[1], ['%f', 'is', '%b'], 'list raw';
 };
 
 subtest execute => sub {

@@ -5,7 +5,7 @@ use File::chdir;
 use Alien::Builder;
 use File::Temp qw( tempdir );
 use Config;
-use Test::More tests => 12;
+use Test::More tests => 15;
 
 $Alien::Builder::BUILD_DIR = tempdir( CLEANUP => 1 );
 
@@ -391,6 +391,26 @@ subtest helper => sub {
   my $string = $builder->_interpolator->interpolate('%{foo}');
   is $string, 'abcdef', 'used heler';
 
+};
+
+subtest build_commands => sub {
+  plan tests => 2;
+  my $builder = Alien::Builder->new;
+  isa_ok $builder->_build_commands, 'Alien::Builder::CommandList';
+  is_deeply [$builder->_build_commands->raw], [['%c --prefix=%s'],['make']];
+};
+
+subtest install_commands => sub {
+  plan tests => 2;
+  my $builder = Alien::Builder->new;
+  isa_ok $builder->_install_commands, 'Alien::Builder::CommandList';
+  is_deeply [$builder->_install_commands->raw], [['make install']];
+};
+
+subtest test_commands => sub {
+  my $builder = Alien::Builder->new;
+  isa_ok $builder->_test_commands, 'Alien::Builder::CommandList';
+  is_deeply [$builder->_test_commands->raw], [];
 };
 
 package

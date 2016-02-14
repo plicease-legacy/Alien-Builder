@@ -48,6 +48,14 @@ Base classes for Alien builder modules
 
 ## version\_check
 
+# METHODS
+
+## alien\_check\_installed\_version
+
+## alien\_check\_built\_version
+
+## alien\_do\_system
+
 # AUTHOR
 
 Graham Ollis &lt;plicease@cpan.org>

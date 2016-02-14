@@ -5,7 +5,8 @@ use File::chdir;
 use Alien::Builder;
 use File::Temp qw( tempdir );
 use Config;
-use Test::More tests => 21;
+use Test::More tests => 23;
+use Capture::Tiny qw( capture );
 
 $Alien::Builder::BUILD_DIR = tempdir( CLEANUP => 1 );
 
@@ -545,6 +546,29 @@ subtest version_check => sub {
     is $builder->alien_prop_version_check, 'foo --bar', 'override';
   };
 
+};
+
+subtest alien_do_system => sub {
+
+  my $builder = Alien::Builder->new(
+    env => { FOO => 'bar', BAZ => undef },
+    helper => { foo => '"bar2"' },
+  );
+  
+  my(undef, undef, %r) = capture { $builder->alien_do_system('%X', -e => 'print $ENV{FOO}') };
+  is $r{stdout}, 'bar', 'stdout=bar';
+  is !!$r{success}, 1, 'success=1';
+
+  (undef, undef, %r) = capture { $builder->alien_do_system('%X', -E => 'print $ARGV[0]', '%{foo}') };
+  is $r{stdout}, 'bar2', 'stdout=bar2';
+  is !!$r{success}, 1, 'success=1';
+
+  (undef, undef, %r) = capture { $builder->alien_do_system('%X', -E => 'print STDERR "stuff"') };
+  is $r{stderr}, 'stuff', 'stderr=stuff';
+  is !!$r{success}, 1, 'success=1';
+
+  (undef, undef, %r) = capture { $builder->alien_do_system('%X', -E => 'exit 2') };
+  is !!$r{success}, '', 'success=0';
 };
 
 package

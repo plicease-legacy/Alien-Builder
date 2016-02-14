@@ -9,6 +9,8 @@ use Alien::Builder::CommandList;
 use Env qw( @PATH );
 use File::chdir;
 use Text::ParseWords qw( shellwords );
+use Capture::Tiny qw( tee capture );
+use Scalar::Util qw( weaken );
 use 5.008001;
 
 # ABSTRACT: Base classes for Alien builder modules
@@ -28,6 +30,8 @@ use 5.008001;
 # not intended as a public interface
 our $OS        = $^O;
 our $BUILD_DIR = '_alien';
+our $DO_SYSTEM;
+our $VERBOSE   = $ENV{ALIEN_VERBOSE};
 
 sub new
 {
@@ -112,11 +116,13 @@ sub alien_prop_bin_requires
 sub alien_prop_build_commands
 {
   my($self) = @_;
-  
+  weaken $self;
   $self->{build_commands} ||= do {
     my @commands = @{ $self->{config}->{build_commands} || [ '%c --prefix=%s', 'make' ] };
     Alien::Builder::CommandList->new(
-      \@commands, interpolator => $self->alien_prop_interpolator,
+      \@commands, 
+      interpolator => $self->alien_prop_interpolator,
+      system       => sub { $self->alien_do_system(@_, { interpolate => 0 }) },
     );
   };
 }
@@ -272,10 +278,13 @@ sub alien_prop_inline_auto_include
 sub alien_prop_install_commands
 {
   my($self) = @_;
+  weaken $self;
   $self->{install_commands} ||= do {
     my @commands = @{ $self->{config}->{install_commands} || [ 'make install' ] };
     Alien::Builder::CommandList->new(
-      \@commands, interpolator => $self->alien_prop_interpolator,
+      \@commands,
+      interpolator => $self->alien_prop_interpolator,
+      system       => sub { $self->alien_do_system(@_, { interpolate => 0 }) },
     );
   };
 }
@@ -371,11 +380,13 @@ sub alien_prop_provides_libs
 sub alien_prop_test_commands
 {
   my($self) = @_;
-  
+  weaken $self;
   $self->{test_commands} ||= do {
     my @commands = @{ $self->{config}->{test_commands} || [] };
     Alien::Builder::CommandList->new(
-      \@commands, interpolator => $self->alien_prop_interpolator,
+      \@commands,
+      interpolator => $self->alien_prop_interpolator,
+      system       => sub { $self->alien_do_system(@_, { interpolate => 0 }) },
     );
   };
 }
@@ -388,6 +399,83 @@ sub alien_prop_version_check
 {
   my($self) = @_;
   $self->{config}->{version_check} || '%{pkg_config} --modversion %n';
+}
+
+=head1 METHODS
+
+=head2 alien_check_installed_version
+
+=cut
+
+sub alien_check_installed_version
+{
+  my($self) = @_;
+  my $command = $self->alien_prop_version_check;
+  my %result = $self->alien_do_system($command, { verbose => 0 });
+  my $version = ($result{success} && $result{stdout}) || 0;
+  return $version;
+}
+
+=head2 alien_check_built_version
+
+=cut
+
+sub alien_check_built_version
+{
+  my($self) = @_;
+  return;
+}
+
+=head2 alien_do_system
+
+=cut
+
+sub alien_do_system
+{
+  my($self, @args) = @_;
+  my $opts = ref $args[-1] ? pop : { verbose => 1, interpolate => 1 };
+  
+  local %ENV = %ENV;
+  foreach my $key (sort keys %{ $self->alien_prop_env })
+  {
+    my $value = $self->alien_prop_env->{$key};
+    if(defined $value)
+    {
+      $ENV{$key} = $value;
+    }
+    else
+    {
+      delete $ENV{$key};
+    }
+  }
+  
+  my $verbose = $VERBOSE || $opts->{verbose};
+  
+  # prevent build process from cwd-ing from underneath us
+  local $CWD;
+  my $initial_cwd = $CWD;
+
+  @args = map { $self->alien_prop_interpolator->interpolate($_) } @args
+    unless $opts->{interplate};
+  print "+ @args\n";
+  
+  my($out, $err, $success) =
+    $verbose
+    ? tee     { $DO_SYSTEM->(@args) }
+    : capture { $DO_SYSTEM->(@args) }
+  ;
+  
+  my %return = (
+    stdout => $out,
+    stderr => $err,
+    success => $success,
+    command => join(' ', @args),
+  );
+  
+  # return wd
+  $CWD = $initial_cwd;
+  
+  return wantarray ? %return : $return{success};
 }
 
 # Private properties and methods
@@ -440,9 +528,10 @@ sub _filter_defines
   join ' ', grep !/^-D/, shellwords($_[0]);
 }
 
-sub _do_system
+
+$DO_SYSTEM = sub
 {
-  my($self, @cmd) = @_;
+  my @cmd = @_;
   
   # Some systems proliferate huge PERL5LIBs, try to ameliorate:
   my %seen;
@@ -462,6 +551,6 @@ sub _do_system
     warn "'Argument list' was 'too long', env lengths are $env_entries";
   }
   return !$status;
-}
+};
 
 1;

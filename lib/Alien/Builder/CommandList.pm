@@ -20,8 +20,6 @@ use warnings;
 
 =item system
 
-=item env
-
 =back
 
 =cut
@@ -30,17 +28,10 @@ sub new
 {
   my($class, $command_list, %args) = @_;  
   
-  unless($args{interpolator})
-  {
-    require Alien::Builder::Interpolator;
-    $args{interpolator} = Alien::Builder::Interpolator->new;
-  }
-  
   bless {
     command_list => [ @{ $command_list || [] } ],
-    interpolator => $args{interpolator}  || \&CORE::system,
-    system       => $args{system}        || [],
-    env          => $args{env}           || {},
+    interpolator => $args{interpolator}  || do { require Alien::Builder::Interpolator; Alien::Builder::Interpolator->new },
+    system       => $args{system}        || \&CORE::system,
   }, $class;
 }
 
@@ -64,20 +55,6 @@ sub interpolate
 sub execute
 {
   my($self) = @_;
-  
-  local %ENV = %ENV;
-
-  while(my($k,$v) = each %{ $self->{env} })
-  {
-    if(defined $v)
-    {
-      $ENV{$k} = $v;
-    }
-    else
-    {
-      delete $ENV{$k};
-    }
-  }
   
   foreach my $command ($self->interpolate)
   {

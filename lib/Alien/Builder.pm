@@ -3,6 +3,7 @@ package Alien::Builder;
 use strict;
 use warnings;
 use Config;
+use Alien::Base::PkgConfig;
 use Alien::Builder::EnvLog;
 use Alien::Builder::CommandList;
 use Env qw( @PATH );
@@ -62,20 +63,9 @@ sub new
 
   bless {
     config => {
-      map { $_ => $args{$_} } qw( 
-        arch
-        autoconf_with_pic
-        bin_requires
-        build_commands
-        build_dir
-        env
-        helper
-        install_commands
-        interpolator
-        msys
-        name
-        test_commands
-      ),
+      map { $_ => $args{$_} } 
+      map { s/^alien_prop_// ? ($_) : () } 
+      sort keys %Alien::Builder::
     },
   }, $class;
 }
@@ -96,13 +86,13 @@ sub new
 # - only this method should read from the config hash, everything else should
 #   go through the property method
 
-sub _arch
+sub alien_prop_arch
 {
   my($self) = @_;
   !!$self->{config}->{arch};
 }
 
-sub _autoconf_with_pic
+sub alien_prop_autoconf_with_pic
 {
   my($self) = @_;
   $self->{autoconf_with_pic} ||= do {
@@ -112,32 +102,32 @@ sub _autoconf_with_pic
   };
 }
 
-sub _bin_requires
+sub alien_prop_bin_requires
 {
   my($self) = @_;
   
   $self->{bin_requires} ||= do {
     my %bin_requires = %{ $self->{config}->{bin_requires} || {} };
     
-    $bin_requires{'Alien::MSYS'} ||= 0 if $self->_msys && $OS eq 'MSWin32';
+    $bin_requires{'Alien::MSYS'} ||= 0 if $self->alien_prop_msys && $OS eq 'MSWin32';
     
     \%bin_requires;
   };
 }
 
-sub _build_commands
+sub alien_prop_build_commands
 {
   my($self) = @_;
   
   $self->{build_commands} ||= do {
     my @commands = @{ $self->{config}->{build_commands} || [ '%c --prefix=%s', 'make' ] };
     Alien::Builder::CommandList->new(
-      \@commands, interpolator => $self->_interpolator,
+      \@commands, interpolator => $self->alien_prop_interpolator,
     );
   };
 }
 
-sub _build_dir
+sub alien_prop_build_dir
 {
   my($self) = @_;
   $self->{build_dir} ||= do {
@@ -149,7 +139,7 @@ sub _build_dir
   };
 }
 
-sub _env
+sub alien_prop_env
 {
   my($self) = @_;
   
@@ -158,8 +148,8 @@ sub _env
     local $ENV{PATH} = $ENV{PATH};
     my $config = $self->{env_log} = Alien::Builder::EnvLog->new;
     
-    foreach my $mod (keys %{ $self->_bin_requires }) {
-      my $version = $self->_bin_requires->{$mod};
+    foreach my $mod (keys %{ $self->alien_prop_bin_requires }) {
+      my $version = $self->alien_prop_bin_requires->{$mod};
       eval qq{ use $mod $version }; # should also work for version = 0
       die $@ if $@;
 
@@ -190,7 +180,7 @@ sub _env
     if($self->_autoconf && !defined $ENV{CONFIG_SITE})
     {
     
-      local $CWD = $self->_build_dir;
+      local $CWD = $self->alien_prop_build_dir;
       
       my $ldflags = $Config{ldflags};
       $ldflags .= " -Wl,-headerpad_max_install_names"
@@ -213,7 +203,7 @@ sub _env
     
     foreach my $key (sort keys %{ $self->{config}->{env} || {} })
     {
-      my $value = $self->_interpolator->interpolate( $self->{config}->{env}->{$key} );
+      my $value = $self->alien_prop_interpolator->interpolate( $self->{config}->{env}->{$key} );
       $env{$key} = $value;
       if(defined $value)
       {
@@ -225,35 +215,36 @@ sub _env
       }
     }
     
-    $config->write_log($self->_build_dir);
+    $config->write_log($self->alien_prop_build_dir);
     
     \%env;
   };
 }
 
-sub _helper
+sub alien_prop_helper
 {
   my($self) = @_;
   $self->{helper} ||= do {
     my %helper = %{ $self->{config}->{helper} || {} };
-    # TODO: provide the pkg_config helper
+    $helper{pkg_config} = 'Alien::Base::PkgConfig->pkg_config_command'
+      unless defined $helper{pkg_config};
     \%helper;
   };
 }
 
-sub _install_commands
+sub alien_prop_install_commands
 {
   my($self) = @_;
   
   $self->{install_commands} ||= do {
     my @commands = @{ $self->{config}->{install_commands} || [ 'make install' ] };
     Alien::Builder::CommandList->new(
-      \@commands, interpolator => $self->_interpolator,
+      \@commands, interpolator => $self->alien_prop_interpolator,
     );
   };
 }
 
-sub _interpolator
+sub alien_prop_interpolator
 {
   my($self) = @_;
   $self->{interpolator} ||= do {
@@ -269,16 +260,16 @@ sub _interpolator
       vars => {
         # for compat with AB::MB we do on truthiness,
         # not definedness
-        n => $self->_name,
+        n => $self->alien_prop_name,
         s => 'TODO',
         c => $self->_autoconf_configure,
       },
-      helpers => $self->_helper,
+      helpers => $self->alien_prop_helper,
     );
   };
 }
 
-sub _msys
+sub alien_prop_msys
 {
   my($self) = @_;
   
@@ -287,20 +278,20 @@ sub _msys
   };
 }
 
-sub _name
+sub alien_prop_name
 {
   my($self) = @_;
   $self->{name} ||= $self->{config}->{name} || '';
 }
 
-sub _test_commands
+sub alien_prop_test_commands
 {
   my($self) = @_;
   
   $self->{test_commands} ||= do {
     my @commands = @{ $self->{config}->{test_commands} || [] };
     Alien::Builder::CommandList->new(
-      \@commands, interpolator => $self->_interpolator,
+      \@commands, interpolator => $self->alien_prop_interpolator,
     );
   };
 }
@@ -315,7 +306,7 @@ sub _autoconf
       map { ref $_ ? @$_ : $_ }
       map { $_->raw }
       map { $self->$_ }
-      qw( _build_commands _install_commands _test_commands );
+      qw( alien_prop_build_commands alien_prop_install_commands alien_prop_test_commands );
   };
 }
 
@@ -323,14 +314,14 @@ sub _autoconf_configure
 {
   my($self) = @_;
   my $configure = $OS eq 'MSWin32' ? 'sh configure' : './configure';
-  $configure .= ' --with-pic' if $self->_autoconf_with_pic;
+  $configure .= ' --with-pic' if $self->alien_prop_autoconf_with_pic;
   $configure;
 }
 
 sub _env_log
 {
   my($self) = @_;
-  $self->_env;
+  $self->alien_prop_env;
   $self->{env_log};
 }
 

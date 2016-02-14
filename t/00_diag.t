@@ -10,6 +10,7 @@ my %modules;
 my $post_diag;
 
 $modules{$_} = $_ for qw(
+  Alien::Base
   Archive::Tar
   Capture::Tiny
   Devel::FindPerl

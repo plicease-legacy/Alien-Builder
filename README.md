@@ -40,6 +40,10 @@ Base classes for Alien builder modules
 
 ## name
 
+## provides\_cflags
+
+## provides\_libs
+
 ## test\_commands
 
 # AUTHOR

@@ -5,7 +5,7 @@ use File::chdir;
 use Alien::Builder;
 use File::Temp qw( tempdir );
 use Config;
-use Test::More tests => 19;
+use Test::More tests => 20;
 
 $Alien::Builder::BUILD_DIR = tempdir( CLEANUP => 1 );
 
@@ -497,6 +497,25 @@ subtest isolate_dynamic => sub {
     plan tests => 1;
     my $builder = Alien::Builder->new( isolate_dynamic => 0 );
     is !!$builder->alien_prop_isolate_dynamic, '', 'off';
+  };
+
+};
+
+subtest 'provides cflags libs' => sub {
+  plan tests => 2;
+  
+  subtest default => sub {
+    plan tests => 2;
+    my $builder = Alien::Builder->new;
+    is $builder->alien_prop_provides_cflags, undef, 'cflags undef';
+    is $builder->alien_prop_provides_libs, undef, 'libs undef';
+  };
+  
+  subtest 'with values' => sub {
+    plan tests => 2;
+    my $builder = Alien::Builder->new( provides_cflags => '-DFOO', provides_libs => '-lfoo' );
+    is $builder->alien_prop_provides_cflags, '-DFOO', 'cflags undef';
+    is $builder->alien_prop_provides_libs, '-lfoo', 'libs undef';
   };
 
 };

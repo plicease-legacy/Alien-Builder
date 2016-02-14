@@ -342,6 +342,24 @@ sub alien_prop_name
   $self->{name} ||= $self->{config}->{name} || '';
 }
 
+=head2 provides_cflags
+
+=head2 provides_libs
+
+=cut
+
+sub alien_prop_provides_cflags
+{
+  my($self) = @_;
+  $self->{config}->{provides_cflags};
+}
+
+sub alien_prop_provides_libs
+{
+  my($self) = @_;
+  $self->{config}->{provides_libs};
+}
+
 =head2 test_commands
 
 =cut

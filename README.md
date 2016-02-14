@@ -10,6 +10,7 @@ Base classes for Alien builder modules
 
 ## new
 
+- arch
 - autoconf\_with\_pic
 - bin\_requires
 - build\_commands

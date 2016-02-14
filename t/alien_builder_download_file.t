@@ -5,7 +5,7 @@ use File::Temp qw( tempdir );
 use Alien::Builder::Download::File;
 
 subtest localfile => sub {
-  plan tests => 3;
+  plan tests => 4;
 
   my $original_filename = 'corpus/file/repo/hello-1.00.tar.gz';
   my $content = do {
@@ -31,10 +31,12 @@ subtest localfile => sub {
   };
   
   is $actual, $content, 'content matches';
+  
+  is $download->is_file, 1, 'is_file';
 };
 
 subtest content => sub {
-  plan tests => 3;
+  plan tests => 4;
 
   my $content = 'abcdefg';
 
@@ -56,4 +58,5 @@ subtest content => sub {
   
   is $actual, $content, 'content matches';
 
+  is $download->is_file, 1, 'is_file';
 };

@@ -82,4 +82,10 @@ sub _localfile { shift->{localfile} }
 sub _content   { shift->{content}   }
 sub _filename  { shift->{filename}  }
 
+=head2 is_file
+
+=cut
+
+sub is_file { 1 }
+
 1;

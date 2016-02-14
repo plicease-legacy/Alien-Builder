@@ -46,4 +46,10 @@ sub uri_for
   $self->{$key};
 }
 
+=head2 is_file
+
+=cut
+
+sub is_file { 0 }
+
 1;

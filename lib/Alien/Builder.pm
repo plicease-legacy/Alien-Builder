@@ -22,6 +22,8 @@ use 5.008001;
 
 =over 4
 
+=item arch
+
 =item autoconf_with_pic
 
 =item bin_requires
@@ -64,12 +66,10 @@ sub new
   $args{build_dir}        ||= $BUILD_DIR;
   $args{interpolator}     ||= 'Alien::Builder::Interpolator::Default';
 
-  $args{autoconf_with_pic} = 1 
-    unless defined $args{autoconf_with_pic};
-
   bless {
     config => {
       map { $_ => $args{$_} } qw( 
+        arch
         autoconf_with_pic
         bin_requires
         build_commands
@@ -86,56 +86,18 @@ sub new
   }, $class;
 }
 
-sub _autoconf_configure
+sub _arch
 {
   my($self) = @_;
-  my $configure = $OS eq 'MSWin32' ? 'sh configure' : './configure';
-  $configure .= ' --with-pic' if $self->{config}->{autoconf_with_pic};
-  $configure;
+  !!$self->{config}->{arch};
 }
 
-sub _interpolator
+sub _autoconf_with_pic
 {
   my($self) = @_;
-  $self->{interpolator} ||= do {
-    my $class = $self->{config}->{interpolator};
-    unless($class->can('new'))
-    {
-      my $pm = $class;
-      $pm =~ s{::}{/}g;
-      $pm .= '.pm';
-      require $pm;
-    }
-    $class->new(
-      vars => {
-        # for compat with AB::MB we do on truthiness,
-        # not definedness
-        n => $self->{config}->{name} || '',
-        s => 'TODO',
-        c => $self->_autoconf_configure,
-      },
-    );
-  };
-}
-
-sub _autoconf
-{
-  my($self) = @_;
-  $self->{autoconf} ||= do {
-    !!grep /(?<!\%)\%c/, 
-      map { ref $_ ? @$_ : $_ }
-      map { @{ $self->{config}->{$_} } }
-      qw( build_commands install_commands test_commands );
-  };
-}
-
-sub _msys
-{
-  my($self) = @_;
-  
-  $self->{msys} ||= do {
-    (!!$self->{config}->{msys}) || $self->_autoconf;
-  };
+  $self->{config}->{autoconf_with_pic} = 1 
+    unless defined $self->{config}->{autoconf_with_pic};
+  !!$self->{config}->{autoconf_with_pic};
 }
 
 sub _bin_requires
@@ -151,11 +113,9 @@ sub _bin_requires
   };
 }
 
-sub _env_log
+sub _build_commands
 {
-  my($self) = @_;
-  $self->_env;
-  $self->{env_log};
+  # TODO
 }
 
 sub _build_dir
@@ -168,25 +128,6 @@ sub _build_dir
     local $CWD = $dir;
     $CWD;
   };
-}
-
-sub _catfile
-{
-  my $file = File::Spec->catfile(@_);
-  $file =~ s{\\}{/}g if $OS eq 'MSWin32';
-  $file;
-}
-
-sub _catdir
-{
-  my $dir = File::Spec->catdir(@_);
-  $dir =~ s{\\}{/}g if $OS eq 'MSWin32';
-  $dir;
-}
-
-sub _filter_defines
-{
-  join ' ', grep !/^-D/, shellwords($_[0]);
 }
 
 sub _env
@@ -269,6 +210,106 @@ sub _env
     
     \%env;
   };
+}
+
+sub _helper
+{
+  # TODO
+}
+
+sub _install_commands
+{
+  # TODO
+}
+
+sub _interpolator
+{
+  my($self) = @_;
+  $self->{interpolator} ||= do {
+    my $class = $self->{config}->{interpolator};
+    unless($class->can('new'))
+    {
+      my $pm = $class;
+      $pm =~ s{::}{/}g;
+      $pm .= '.pm';
+      require $pm;
+    }
+    $class->new(
+      vars => {
+        # for compat with AB::MB we do on truthiness,
+        # not definedness
+        n => $self->{config}->{name} || '',
+        s => 'TODO',
+        c => $self->_autoconf_configure,
+      },
+    );
+  };
+}
+
+sub _msys
+{
+  my($self) = @_;
+  
+  $self->{msys} ||= do {
+    (!!$self->{config}->{msys}) || $self->_autoconf;
+  };
+}
+
+sub _name
+{
+  # TODO
+}
+
+sub _test_commands
+{
+  # TODO
+}
+
+#
+
+sub _autoconf
+{
+  my($self) = @_;
+  $self->{autoconf} ||= do {
+    !!grep /(?<!\%)\%c/, 
+      map { ref $_ ? @$_ : $_ }
+      map { @{ $self->{config}->{$_} } }
+      qw( build_commands install_commands test_commands );
+  };
+}
+
+sub _autoconf_configure
+{
+  my($self) = @_;
+  my $configure = $OS eq 'MSWin32' ? 'sh configure' : './configure';
+  $configure .= ' --with-pic' if $self->_autoconf_with_pic;
+  $configure;
+}
+
+sub _env_log
+{
+  my($self) = @_;
+  $self->_env;
+  $self->{env_log};
+}
+
+sub _catfile
+{
+  my $file = File::Spec->catfile(@_);
+  $file =~ s{\\}{/}g if $OS eq 'MSWin32';
+  $file;
+}
+
+sub _catdir
+{
+  my $dir = File::Spec->catdir(@_);
+  $dir =~ s{\\}{/}g if $OS eq 'MSWin32';
+  $dir;
+}
+
+sub _filter_defines
+{
+  join ' ', grep !/^-D/, shellwords($_[0]);
 }
 
 sub _do_system

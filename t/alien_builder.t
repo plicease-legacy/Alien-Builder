@@ -563,9 +563,13 @@ subtest alien_do_system => sub {
   is $r{stdout}, 'bar2', 'stdout=bar2';
   is !!$r{success}, 1, 'success=1';
 
-  (undef, undef, %r) = capture { $builder->alien_do_system('%X', -e => 'print STDERR "stuff"') };
-  is $r{stderr}, 'stuff', 'stderr=stuff';
-  is !!$r{success}, 1, 'success=1';
+  SKIP: {
+    # capturing STDERR on windows with Capture::Tiny seems to be somewhat broken.
+    skip 'see https://github.com/dagolden/Capture-Tiny/issues/7', 2 if $^O eq 'MSWin32';
+    (undef, undef, %r) = capture { $builder->alien_do_system('%X', -e => 'print STDERR "stuff"') };
+    is $r{stderr}, 'stuff', 'stderr=stuff';
+    is !!$r{success}, 1, 'success=1';
+  };
 
   (undef, undef, %r) = capture { $builder->alien_do_system('%X', -e => 'exit 2') };
   is !!$r{success}, '', 'success=0';

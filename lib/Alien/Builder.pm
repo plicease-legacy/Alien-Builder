@@ -24,6 +24,10 @@ use 5.008001;
 
 =head2 new
 
+ my $builder = Alien::Builder->new(%properties);
+
+Create a new instance of L<Alien::Builder>.
+
 =cut
 
 # these are mainly for testing, and

@@ -10,6 +10,10 @@ Base classes for Alien builder modules
 
 ## new
 
+    my $builder = Alien::Builder->new(%properties);
+
+Create a new instance of [Alien::Builder](https://metacpan.org/pod/Alien::Builder).
+
 # PROPERTIES
 
 Properties can be specified by passing them into ["new"](#new) as arguments.  

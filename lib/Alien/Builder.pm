@@ -329,7 +329,7 @@ sub alien_prop_extractor
 {
   my($self) = @_;
   $self->{extractor} ||= do {
-    my($class) = $self->_class(
+    $self->_class(
       $self->{config}->{extractor},
       'Alien::Builder::Extractor::Plugin',
       'ArchiveTar',

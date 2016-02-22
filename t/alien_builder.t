@@ -244,7 +244,7 @@ subtest 'interpolator' => sub {
 };
 
 subtest 'extractor' => sub {
-  plan tests => 1;
+  plan tests => 3;
 
   subtest default => sub {
     plan tests => 2;
@@ -252,6 +252,21 @@ subtest 'extractor' => sub {
     is $xtor, 'Alien::Builder::Extractor::Plugin::ArchiveTar';
     ok $xtor->can('extract'), 'can extract';
   };
+
+  subtest 'fully qualified' => sub {
+    plan tests => 2;
+    my $xtor = Alien::Builder->new( extractor => 'Alien::Builder::Extractor::Plugin::Foo' )->alien_prop_extractor;
+    is $xtor, 'Alien::Builder::Extractor::Plugin::Foo';
+    ok $xtor->can('extract'), 'can extract';
+  };
+
+  subtest 'abbreviated' => sub {
+    plan tests => 2;
+    my $xtor = Alien::Builder->new( extractor => 'Foo' )->alien_prop_extractor;
+    is $xtor, 'Alien::Builder::Extractor::Plugin::Foo';
+    ok $xtor->can('extract'), 'can extract';
+  };
+  
 };
 
 subtest 'env' => sub {

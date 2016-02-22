@@ -738,7 +738,7 @@ sub _class
   my(undef, $name, $default_prefix, $default_name, $method) = @_;
   $name = $default_name unless defined $name;
   $method ||= 'new';
-  my $class = $name =~ /::/ ? $name : join('::', $default_prefix, $name);
+  my $class = ($name||'') =~ /::/ ? $name : defined $name ? join('::', $default_prefix, $name) : $default_prefix;
   unless($class->can($method))
   {
     my $pm = $class;

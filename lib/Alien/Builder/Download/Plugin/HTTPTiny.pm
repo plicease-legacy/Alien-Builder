@@ -64,7 +64,14 @@ sub get
 
         # convert href into an absolute URL
         my $url = URI->new_abs( $attr->{href}, $res->{url} );
-        my(undef,undef,$filename) = File::Spec::Unix->splitpath($url->path);
+        my(undef,$dir,$filename) = File::Spec::Unix->splitpath($url->path);
+        
+        unless($filename ne '')
+        {
+          my @dirs = File::Spec::Unix->splitdir($dir);
+          pop @dirs while $dirs[-1] eq '';
+          $filename = $dirs[-1];
+        }
         
         $list{$filename} = $url;
         

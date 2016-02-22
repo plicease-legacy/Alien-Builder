@@ -332,6 +332,17 @@ available sequences are:
 
     A literal `%`.
 
+# SEE ALSO
+
+- [Alien::Base](https://metacpan.org/pod/Alien::Base)
+
+    Runtime access to configuration determined by [Alien::Builder](https://metacpan.org/pod/Alien::Builder) and 
+    build time.
+
+- [Alien](https://metacpan.org/pod/Alien)
+
+    The original [Alien](https://metacpan.org/pod/Alien) manifesto.
+
 # AUTHOR
 
 Graham Ollis &lt;plicease@cpan.org>

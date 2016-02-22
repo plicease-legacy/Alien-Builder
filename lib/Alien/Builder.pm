@@ -835,4 +835,19 @@ A literal C<%>.
 
 =back
 
+=head1 SEE ALSO
+
+=over 4
+
+=item L<Alien::Base>
+
+Runtime access to configuration determined by L<Alien::Builder> and 
+build time.
+
+=item L<Alien>
+
+The original L<Alien> manifesto.
+
+=back
+
 =cut

@@ -60,7 +60,6 @@ sub _recurse
   }
   else
   {
-    $DB::single = 1;
     my $selection = shift @selections;
     
     my $can_class = Alien::Builder->_class(

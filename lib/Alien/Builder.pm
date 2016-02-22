@@ -318,6 +318,26 @@ sub alien_prop_env
   };
 }
 
+=head2 extractor
+
+The extractor class.  This is 
+L<Alien::Builder::Extractor::Plugin::ArchiveTar> by default.
+
+=cut
+
+sub alien_prop_extractor
+{
+  my($self) = @_;
+  $self->{extractor} ||= do {
+    my($class) = $self->_class(
+      $self->{config}->{extractor},
+      'Alien::Builder::Extractor::Plugin',
+      'ArchiveTar',
+      'extract',
+    );
+  };
+}
+
 =head2 ffi_name
 
 The name of the shared library for use with FFI.  Provided for 
@@ -435,14 +455,11 @@ sub alien_prop_interpolator
 {
   my($self) = @_;
   $self->{interpolator} ||= do {
-    my $class = $self->{config}->{interpolator} || 'Alien::Builder::Interpolator::Default';
-    unless($class->can('new'))
-    {
-      my $pm = $class;
-      $pm =~ s{::}{/}g;
-      $pm .= '.pm';
-      require $pm;
-    }
+    my($class) = $self->_class(
+      $self->{config}->{interpolator},
+      'Alien::Builder::Interpolator',
+      'Default'
+    );
     $class->new(
       vars => {
         # for compat with AB::MB we do on truthiness,
@@ -715,6 +732,22 @@ sub _env_log
 }
 
 # private methods
+
+sub _class
+{
+  my(undef, $name, $default_prefix, $default_name, $method) = @_;
+  $name = $default_name unless defined $name;
+  $method ||= 'new';
+  my $class = $name =~ /::/ ? $name : join('::', $default_prefix, $name);
+  unless($class->can($method))
+  {
+    my $pm = $class;
+    $pm =~ s{::}{/}g;
+    $pm .= '.pm';
+    require $pm;
+  }
+  $class;
+}
 
 sub _catfile
 {

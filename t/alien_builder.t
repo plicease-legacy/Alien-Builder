@@ -5,7 +5,7 @@ use File::chdir;
 use Alien::Builder;
 use File::Temp qw( tempdir );
 use Config;
-use Test::More tests => 22;
+use Test::More tests => 23;
 use Capture::Tiny qw( capture );
 
 $Alien::Builder::BUILD_DIR = tempdir( CLEANUP => 1 );
@@ -216,13 +216,42 @@ subtest 'filter_defines' => sub {
 };
 
 subtest 'interpolator' => sub {
-  plan tests => 2;
+  plan tests => 3;
 
-  my $intr = Alien::Builder->new->alien_prop_interpolator;
+  subtest default => sub {
+    plan tests => 2;
+    my $intr = Alien::Builder->new->alien_prop_interpolator;
+    isa_ok $intr, 'Alien::Builder::Interpolator::Default';
+    isa_ok $intr, 'Alien::Builder::Interpolator';
+  };
   
-  isa_ok $intr, 'Alien::Builder::Interpolator::Default';
-  isa_ok $intr, 'Alien::Builder::Interpolator';
+  subtest 'fully qualified' => sub {
+    plan tests => 1;
+    my $intr = Alien::Builder->new(
+      interpolator => 'Alien::Builder::Interpolator::Foo',
+    )->alien_prop_interpolator;
+    isa_ok $intr, 'Alien::Builder::Interpolator::Foo';
+  };
 
+  subtest 'abbreviated' => sub {
+    plan tests => 1;
+    my $intr = Alien::Builder->new(
+      interpolator => 'Foo',
+    )->alien_prop_interpolator;
+    isa_ok $intr, 'Alien::Builder::Interpolator::Foo';
+  };
+
+};
+
+subtest 'extractor' => sub {
+  plan tests => 1;
+
+  subtest default => sub {
+    plan tests => 2;
+    my $xtor = Alien::Builder->new->alien_prop_extractor;
+    is $xtor, 'Alien::Builder::Extractor::Plugin::ArchiveTar';
+    ok $xtor->can('extract'), 'can extract';
+  };
 };
 
 subtest 'env' => sub {
@@ -589,3 +618,12 @@ sub new
   );
 }
 
+package
+  Alien::Builder::Interpolator::Foo;
+
+use base qw( Alien::Builder::Interpolator );
+
+package
+  Alien::Builder::Extractor::Plugin::Foo;
+
+sub extract {}

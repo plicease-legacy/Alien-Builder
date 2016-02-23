@@ -546,6 +546,28 @@ sub alien_prop_provides_libs
   $self->{config}->{provides_libs};
 }
 
+=head2 retrievor
+
+=cut
+
+sub alien_prop_retrievor
+{
+  my($self) = @_;
+  $self->{retrievor} ||= $self->alien_prop_retrievor_class->new(@{ $self->{config}->{retrievor} || [] });
+}
+
+=head2 retrievor_class
+
+=cut
+
+sub alien_prop_retrievor_class
+{
+  my($self) = @_;
+  $self->{retrievor_class} ||= do {
+    $self->_class($self->{config}->{retrievor_class}, 'Alien::Builder::Retrievor');
+  };
+}
+
 =head2 test_commands
 
 An array reference of commands used to test the library in the directory 

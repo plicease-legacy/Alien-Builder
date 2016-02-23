@@ -5,7 +5,7 @@ use File::chdir;
 use Alien::Builder;
 use File::Temp qw( tempdir );
 use Config;
-use Test::More tests => 23;
+use Test::More tests => 24;
 use Capture::Tiny qw( capture );
 
 $Alien::Builder::BUILD_DIR = tempdir( CLEANUP => 1 );
@@ -619,6 +619,20 @@ subtest alien_do_system => sub {
   is !!$r{success}, '', 'success=0';
 };
 
+subtest retrievor => sub {
+
+  subtest default => sub {
+    my $builder = Alien::Builder->new;
+    isa_ok $builder->alien_prop_retrievor, 'Alien::Builder::Retrievor';
+  };
+  
+  subtest 'alt class' => sub {
+    my $builder = Alien::Builder->new( retrievor_class => 'My::Retrievor' );
+    isa_ok $builder->alien_prop_retrievor, 'My::Retrievor';
+  };
+
+};
+
 package
   My::Intr;
 
@@ -642,3 +656,9 @@ package
   Alien::Builder::Extractor::Plugin::Foo;
 
 sub extract {}
+
+
+package
+  My::Retrievor;
+
+use base qw( Alien::Builder::Retrievor );

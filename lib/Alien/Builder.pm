@@ -41,10 +41,27 @@ sub new
 {
   my($class, %args) = @_;  
 
+  # TODO
+  # this doesn't allow for defining properties in a subclass
+  # which we will eventually want to support.
+  foreach my $prop (grep s/^build_prop_//, keys %Alien::Builder::)
+  {
+    next if __PACKAGE__->can("alien_prop_$prop");
+    my $accessor_method = sub {
+      my($self) = @_;
+      $self->{prop_cache}->{$prop} ||= do {
+        my $builder_method = "build_prop_$prop";
+        $self->$builder_method;
+      };
+    };
+    no strict 'refs';
+    *{"alien_prop_$prop"} = $accessor_method;
+  }
+
   bless {
     config => {
       map { $_ => $args{$_} } 
-      map { s/^alien_prop_// ? ($_) : () } 
+      map { s/^build_prop_// ? ($_) : () } 
       sort keys %Alien::Builder::
     },
   }, $class;
@@ -86,14 +103,12 @@ be installed in architecture specific directories.
 
 =cut
 
-sub alien_prop_arch
+sub build_prop_arch
 {
   my($self) = @_;
-  $self->{arch} ||= do {
-    my $arch = $self->{config}->{arch};
-    $arch = $ENV{ALIEN_ARCH} unless defined $arch;
-    !!$arch;
-  };
+  my $arch = $self->{config}->{arch};
+  $arch = $ENV{ALIEN_ARCH} unless defined $arch;
+  !!$arch;
 }
 
 =head2 autoconf_with_pic
@@ -105,14 +120,12 @@ some non-autoconf C<configure> scripts may complain.
 
 =cut
 
-sub alien_prop_autoconf_with_pic
+sub build_prop_autoconf_with_pic
 {
   my($self) = @_;
-  $self->{autoconf_with_pic} ||= do {
-    my $acwp = $self->{config}->{autoconf_with_pic};
-    $acwp = 1 unless defined $acwp;
-    $acwp;
-  };
+  my $acwp = $self->{config}->{autoconf_with_pic};
+  $acwp = 1 unless defined $acwp;
+  $acwp;
 }
 
 =head2 bin_requires
@@ -127,17 +140,15 @@ required.
 
 =cut
 
-sub alien_prop_bin_requires
+sub build_prop_bin_requires
 {
   my($self) = @_;
   
-  $self->{bin_requires} ||= do {
-    my %bin_requires = %{ $self->{config}->{bin_requires} || {} };
-    
-    $bin_requires{'Alien::MSYS'} ||= 0 if $self->alien_prop_msys && $OS eq 'MSWin32';
-    
-    \%bin_requires;
-  };
+  my %bin_requires = %{ $self->{config}->{bin_requires} || {} };
+  
+  $bin_requires{'Alien::MSYS'} ||= 0 if $self->alien_prop_msys && $OS eq 'MSWin32';
+  
+  \%bin_requires;
 }
 
 =head2 build_commands
@@ -153,18 +164,16 @@ multiple argument form of system is used.
 
 =cut
 
-sub alien_prop_build_commands
+sub build_prop_build_commands
 {
   my($self) = @_;
   weaken $self;
-  $self->{build_commands} ||= do {
-    my @commands = @{ $self->{config}->{build_commands} || [ '%c --prefix=%s', 'make' ] };
-    Alien::Builder::CommandList->new(
-      \@commands, 
-      interpolator => $self->alien_prop_interpolator,
-      system       => sub { $self->alien_do_system(@_, { interpolate => 0 }) },
-    );
-  };
+  my @commands = @{ $self->{config}->{build_commands} || [ '%c --prefix=%s', 'make' ] };
+  Alien::Builder::CommandList->new(
+    \@commands, 
+    interpolator => $self->alien_prop_interpolator,
+    system       => sub { $self->alien_do_system(@_, { interpolate => 0 }) },
+  );
 }
 
 =head2 build_dir
@@ -174,16 +183,14 @@ downloaded and built.  The default name is C<_alien>.
 
 =cut
 
-sub alien_prop_build_dir
+sub build_prop_build_dir
 {
   my($self) = @_;
-  $self->{build_dir} ||= do {
-    my $dir = $self->{config}->{build_dir} || $BUILD_DIR;
-    mkdir($dir) || die "unable to create $dir $!"
-      unless -d $dir;
-    local $CWD = $dir;
-    $CWD;
-  };
+  my $dir = $self->{config}->{build_dir} || $BUILD_DIR;
+  mkdir($dir) || die "unable to create $dir $!"
+    unless -d $dir;
+  local $CWD = $dir;
+  $CWD;
 }
 
 =head2 env
@@ -236,86 +243,84 @@ which may not be what you intend.
 
 =cut
 
-sub alien_prop_env
+sub build_prop_env
 {
   my($self) = @_;
   
-  $self->{env} ||= do {
-    my %env;
-    local $ENV{PATH} = $ENV{PATH};
-    my $config = $self->{env_log} = Alien::Builder::EnvLog->new;
-    
-    foreach my $mod (keys %{ $self->alien_prop_bin_requires }) {
-      my $version = $self->alien_prop_bin_requires->{$mod};
-      eval qq{ use $mod $version }; # should also work for version = 0
-      die $@ if $@;
+  my %env;
+  local $ENV{PATH} = $ENV{PATH};
+  my $config = $self->{env_log} = Alien::Builder::EnvLog->new;
+  
+  foreach my $mod (keys %{ $self->alien_prop_bin_requires }) {
+    my $version = $self->alien_prop_bin_requires->{$mod};
+    eval qq{ use $mod $version }; # should also work for version = 0
+    die $@ if $@;
 
-      my %path;
-    
-      if ($mod eq 'Alien::MSYS') {
-        $path{Alien::MSYS->msys_path} = 1;
-      } elsif ($mod eq 'Alien::CMake') {
-        Alien::CMake->set_path;
-      } elsif ($mod eq 'Alien::TinyCC') {
-        $path{Alien::TinyCC->path_to_tcc} = 1;
-      } elsif ($mod eq 'Alien::Autotools') {
-        $path{$_} = 1 for map { Alien::Autotools->$_ } qw( autoconf_dir automake_dir libtool_dir );
-      } elsif (eval { $mod->can('bin_dir') }) {
-        $path{$_} = 1 for $mod->bin_dir;
-      }
-    
-      # remove anything already in PATH
-      delete $path{$_} for @PATH;
-      # add anything else to start of PATH
-      my @value = sort keys %path;
-      unshift @PATH, @value;
-
-      $config->prepend_path( PATH => @value );
-      $env{PATH} = $ENV{PATH};
+    my %path;
+  
+    if ($mod eq 'Alien::MSYS') {
+      $path{Alien::MSYS->msys_path} = 1;
+    } elsif ($mod eq 'Alien::CMake') {
+      Alien::CMake->set_path;
+    } elsif ($mod eq 'Alien::TinyCC') {
+      $path{Alien::TinyCC->path_to_tcc} = 1;
+    } elsif ($mod eq 'Alien::Autotools') {
+      $path{$_} = 1 for map { Alien::Autotools->$_ } qw( autoconf_dir automake_dir libtool_dir );
+    } elsif (eval { $mod->can('bin_dir') }) {
+      $path{$_} = 1 for $mod->bin_dir;
     }
+  
+    # remove anything already in PATH
+    delete $path{$_} for @PATH;
+    # add anything else to start of PATH
+    my @value = sort keys %path;
+    unshift @PATH, @value;
+
+    $config->prepend_path( PATH => @value );
+    $env{PATH} = $ENV{PATH};
+  }
     
-    if($self->_autoconf && !defined $ENV{CONFIG_SITE})
-    {
+  if($self->_autoconf && !defined $ENV{CONFIG_SITE})
+  {
     
-      local $CWD = $self->alien_prop_build_dir;
+    local $CWD = $self->alien_prop_build_dir;
       
-      my $ldflags = $Config{ldflags};
-      $ldflags .= " -Wl,-headerpad_max_install_names"
-        if $OS eq 'darwin';
+    my $ldflags = $Config{ldflags};
+    $ldflags .= " -Wl,-headerpad_max_install_names"
+      if $OS eq 'darwin';
       
-      open my $fh, '>', 'config.site';
-      print $fh "CC='$Config{cc}'\n";
-      # -D define flags should be stripped because they are Perl
-      # specific.
-      print $fh "CFLAGS='", _filter_defines($Config{ccflags}), "'\n";
-      print $fh "CPPFLAGS='", _filter_defines($Config{cppflags}), "'\n";
-      print $fh "CXXFLAGS='", _filter_defines($Config{ccflags}), "'\n";
-      print $fh "LDFLAGS='$ldflags'\n";
-      close $fh;
+    open my $fh, '>', 'config.site';
+    print $fh "CC='$Config{cc}'\n";
+    # -D define flags should be stripped because they are Perl
+    # specific.
+    print $fh "CFLAGS='", _filter_defines($Config{ccflags}), "'\n";
+    print $fh "CPPFLAGS='", _filter_defines($Config{cppflags}), "'\n";
+    print $fh "CXXFLAGS='", _filter_defines($Config{ccflags}), "'\n";
+    print $fh "LDFLAGS='$ldflags'\n";
+    close $fh;
 
-      my $config_site = _catfile($CWD, 'config.site');
-      $config->set( CONFIG_SITE => $config_site );
-      $env{CONFIG_SITE} = $config_site;
-    }
+    my $config_site = _catfile($CWD, 'config.site');
+    $config->set( CONFIG_SITE => $config_site );
+    $env{CONFIG_SITE} = $config_site;
+  }
     
-    foreach my $key (sort keys %{ $self->{config}->{env} || {} })
+  foreach my $key (sort keys %{ $self->{config}->{env} || {} })
+  {
+    my $value = $self->alien_prop_interpolator->interpolate( $self->{config}->{env}->{$key} );
+    $env{$key} = $value;
+    if(defined $value)
     {
-      my $value = $self->alien_prop_interpolator->interpolate( $self->{config}->{env}->{$key} );
-      $env{$key} = $value;
-      if(defined $value)
-      {
-        $config->set( $key => $value );
-      }
-      else
-      {
-        $config->unset( $key );
-      }
+      $config->set( $key => $value );
     }
+    else
+    {
+      $config->unset( $key );
+    }
+  }
     
-    $config->write_log($self->alien_prop_build_dir);
+  $config->write_log($self->alien_prop_build_dir);
     
-    \%env;
-  };
+  \%env;
 }
 
 =head2 extractor
@@ -325,17 +330,15 @@ L<Alien::Builder::Extractor::Plugin::ArchiveTar> by default.
 
 =cut
 
-sub alien_prop_extractor
+sub build_prop_extractor
 {
   my($self) = @_;
-  $self->{extractor} ||= do {
-    $self->_class(
-      $self->{config}->{extractor},
-      'Alien::Builder::Extractor::Plugin',
-      'ArchiveTar',
-      'extract',
-    );
-  };
+  $self->_class(
+    $self->{config}->{extractor},
+    'Alien::Builder::Extractor::Plugin',
+    'ArchiveTar',
+    'extract',
+  );
 }
 
 =head2 ffi_name
@@ -350,14 +353,12 @@ will be C<archive>.
 
 =cut
 
-sub alien_prop_ffi_name
+sub build_prop_ffi_name
 {
   my($self) = @_;
-  $self->{ffi_name} ||= do {
-    my $name = $self->{config}->{ffi_name};
-    $name = $self->alien_prop_name unless defined $name;
-    $name;
-  };
+  my $name = $self->{config}->{ffi_name};
+  $name = $self->alien_prop_name unless defined $name;
+  $name;
 }
 
 =head2 helper
@@ -390,15 +391,13 @@ CPAN.
 
 =cut
 
-sub alien_prop_helper
+sub build_prop_helper
 {
   my($self) = @_;
-  $self->{helper} ||= do {
-    my %helper = %{ $self->{config}->{helper} || {} };
-    $helper{pkg_config} = 'Alien::Base::PkgConfig->pkg_config_command'
-      unless defined $helper{pkg_config};
-    \%helper;
-  };
+  my %helper = %{ $self->{config}->{helper} || {} };
+  $helper{pkg_config} = 'Alien::Base::PkgConfig->pkg_config_command'
+    unless defined $helper{pkg_config};
+  \%helper;
 }
 
 =head2 inline_auto_include
@@ -408,13 +407,11 @@ automatically by L<Inline::C> and L<Inline::CPP>.
 
 =cut
 
-sub alien_prop_inline_auto_include
+sub build_prop_inline_auto_include
 {
   my($self) = @_;
-  $self->{inline_auto_include} ||= do {
-    my @iai = @{ $self->{config}->{inline_auto_include} || [] };
-    \@iai;
-  };
+  my @iai = @{ $self->{config}->{inline_auto_include} || [] };
+  \@iai;
 }
 
 =head2 install_commands
@@ -430,18 +427,16 @@ argument form of system is used.
 
 =cut
 
-sub alien_prop_install_commands
+sub build_prop_install_commands
 {
   my($self) = @_;
   weaken $self;
-  $self->{install_commands} ||= do {
-    my @commands = @{ $self->{config}->{install_commands} || [ 'make install' ] };
-    Alien::Builder::CommandList->new(
-      \@commands,
-      interpolator => $self->alien_prop_interpolator,
-      system       => sub { $self->alien_do_system(@_, { interpolate => 0 }) },
-    );
-  };
+  my @commands = @{ $self->{config}->{install_commands} || [ 'make install' ] };
+  Alien::Builder::CommandList->new(
+    \@commands,
+    interpolator => $self->alien_prop_interpolator,
+    system       => sub { $self->alien_do_system(@_, { interpolate => 0 }) },
+  );
 }
 
 =head2 interpolator
@@ -451,26 +446,24 @@ L<Alien::Builder::Interpolator::Default> by default.
 
 =cut
 
-sub alien_prop_interpolator
+sub build_prop_interpolator
 {
   my($self) = @_;
-  $self->{interpolator} ||= do {
-    my($class) = $self->_class(
-      $self->{config}->{interpolator},
-      'Alien::Builder::Interpolator',
-      'Default'
-    );
-    $class->new(
-      vars => {
-        # for compat with AB::MB we do on truthiness,
-        # not definedness
-        n => $self->alien_prop_name,
-        s => 'TODO',
-        c => $self->_autoconf_configure,
-      },
-      helpers => $self->alien_prop_helper,
-    );
-  };
+  my($class) = $self->_class(
+    $self->{config}->{interpolator},
+    'Alien::Builder::Interpolator',
+    'Default'
+  );
+  $class->new(
+    vars => {
+      # for compat with AB::MB we do on truthiness,
+      # not definedness
+      n => $self->alien_prop_name,
+      s => 'TODO',
+      c => $self->_autoconf_configure,
+    },
+    helpers => $self->alien_prop_helper,
+  );
 }
 
 =head2 isolate_dynamic
@@ -482,14 +475,12 @@ while preferring static libraries when creating C<XS> extensions.
 
 =cut
 
-sub alien_prop_isolate_dynamic
+sub build_prop_isolate_dynamic
 {
   my($self) = @_;
-  $self->{isolate_dynamic} ||= do {
-    my $id = $self->{config}->{isolate_dynamic};
-    $id = 1 unless defined $id;
-    $id;
-  };
+  my $id = $self->{config}->{isolate_dynamic};
+  $id = 1 unless defined $id;
+  $id;
 }
 
 =head2 msys
@@ -500,13 +491,10 @@ requirement when building on Windows.
 
 =cut
 
-sub alien_prop_msys
+sub build_prop_msys
 {
   my($self) = @_;
-  
-  $self->{msys} ||= do {
-    (!!$self->{config}->{msys}) || $self->_autoconf;
-  };
+  (!!$self->{config}->{msys}) || $self->_autoconf;
 }
 
 =head2 name
@@ -516,10 +504,10 @@ in the form to be passed to C<pkg-config>.
 
 =cut
 
-sub alien_prop_name
+sub build_prop_name
 {
   my($self) = @_;
-  $self->{name} ||= $self->{config}->{name} || '';
+  $self->{config}->{name} || '';
 }
 
 =head2 provides_cflags
@@ -534,13 +522,13 @@ files and header files. They both are empty by default.
 
 =cut
 
-sub alien_prop_provides_cflags
+sub build_prop_provides_cflags
 {
   my($self) = @_;
   $self->{config}->{provides_cflags};
 }
 
-sub alien_prop_provides_libs
+sub build_prop_provides_libs
 {
   my($self) = @_;
   $self->{config}->{provides_libs};
@@ -550,22 +538,20 @@ sub alien_prop_provides_libs
 
 =cut
 
-sub alien_prop_retrievor
+sub build_prop_retrievor
 {
   my($self) = @_;
-  $self->{retrievor} ||= $self->alien_prop_retrievor_class->new(@{ $self->{config}->{retrievor} || [] });
+  $self->alien_prop_retrievor_class->new(@{ $self->{config}->{retrievor} || [] });
 }
 
 =head2 retrievor_class
 
 =cut
 
-sub alien_prop_retrievor_class
+sub build_prop_retrievor_class
 {
   my($self) = @_;
-  $self->{retrievor_class} ||= do {
-    $self->_class($self->{config}->{retrievor_class}, 'Alien::Builder::Retrievor');
-  };
+  $self->_class($self->{config}->{retrievor_class}, 'Alien::Builder::Retrievor');
 }
 
 =head2 test_commands
@@ -580,18 +566,16 @@ system is used.
 
 =cut
 
-sub alien_prop_test_commands
+sub build_prop_test_commands
 {
   my($self) = @_;
   weaken $self;
-  $self->{test_commands} ||= do {
-    my @commands = @{ $self->{config}->{test_commands} || [] };
-    Alien::Builder::CommandList->new(
-      \@commands,
-      interpolator => $self->alien_prop_interpolator,
-      system       => sub { $self->alien_do_system(@_, { interpolate => 0 }) },
-    );
-  };
+  my @commands = @{ $self->{config}->{test_commands} || [] };
+  Alien::Builder::CommandList->new(
+    \@commands,
+    interpolator => $self->alien_prop_interpolator,
+    system       => sub { $self->alien_do_system(@_, { interpolate => 0 }) },
+  );
 }
 
 =head2 version_check
@@ -601,7 +585,7 @@ system.  The default is C<pkg-config --modversion %n>.
 
 =cut
 
-sub alien_prop_version_check
+sub build_prop_version_check
 {
   my($self) = @_;
   $self->{config}->{version_check} || '%{pkg_config} --modversion %n';

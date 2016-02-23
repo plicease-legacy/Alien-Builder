@@ -113,6 +113,11 @@ which may not be what you intend.
     
     $ENV{FOO} = ''; # same issue.
 
+## extractor
+
+The extractor class.  This is 
+[Alien::Builder::Extractor::Plugin::ArchiveTar](https://metacpan.org/pod/Alien::Builder::Extractor::Plugin::ArchiveTar) by default.
+
 ## ffi\_name
 
 The name of the shared library for use with FFI.  Provided for 
@@ -199,6 +204,10 @@ These parameters, if specified, augment the information found by
 generate the necessary information. In that case, if these are not 
 specified, they are attempted to be created from found shared-object 
 files and header files. They both are empty by default.
+
+## retrievor
+
+## retrievor\_class
 
 ## test\_commands
 

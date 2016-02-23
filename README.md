@@ -205,9 +205,9 @@ generate the necessary information. In that case, if these are not
 specified, they are attempted to be created from found shared-object 
 files and header files. They both are empty by default.
 
-## retrievor
+## retriever
 
-## retrievor\_class
+## retriever\_class
 
 ## test\_commands
 

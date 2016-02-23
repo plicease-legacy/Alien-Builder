@@ -619,16 +619,16 @@ subtest alien_do_system => sub {
   is !!$r{success}, '', 'success=0';
 };
 
-subtest retrievor => sub {
+subtest retriever => sub {
 
   subtest default => sub {
     my $builder = Alien::Builder->new;
-    isa_ok $builder->alien_prop_retrievor, 'Alien::Builder::Retrievor';
+    isa_ok $builder->alien_prop_retriever, 'Alien::Builder::Retriever';
   };
   
   subtest 'alt class' => sub {
-    my $builder = Alien::Builder->new( retrievor_class => 'My::Retrievor' );
-    isa_ok $builder->alien_prop_retrievor, 'My::Retrievor';
+    my $builder = Alien::Builder->new( retriever_class => 'My::Retriever' );
+    isa_ok $builder->alien_prop_retriever, 'My::Retriever';
   };
 
 };
@@ -659,6 +659,6 @@ sub extract {}
 
 
 package
-  My::Retrievor;
+  My::Retriever;
 
-use base qw( Alien::Builder::Retrievor );
+use base qw( Alien::Builder::Retriever );

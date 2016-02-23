@@ -534,24 +534,24 @@ sub build_prop_provides_libs
   $self->{config}->{provides_libs};
 }
 
-=head2 retrievor
+=head2 retriever
 
 =cut
 
-sub build_prop_retrievor
+sub build_prop_retriever
 {
   my($self) = @_;
-  $self->alien_prop_retrievor_class->new(@{ $self->{config}->{retrievor} || [] });
+  $self->alien_prop_retriever_class->new(@{ $self->{config}->{retriever} || [] });
 }
 
-=head2 retrievor_class
+=head2 retriever_class
 
 =cut
 
-sub build_prop_retrievor_class
+sub build_prop_retriever_class
 {
   my($self) = @_;
-  $self->_class($self->{config}->{retrievor_class}, 'Alien::Builder::Retrievor');
+  $self->_class($self->{config}->{retriever_class}, 'Alien::Builder::Retriever');
 }
 
 =head2 test_commands

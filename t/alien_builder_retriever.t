@@ -1,15 +1,15 @@
 use strict;
 use warnings;
 use Test::More tests => 4;
-use Alien::Builder::Retrievor;
+use Alien::Builder::Retriever;
 use URI;
 use URI::file;
 
 subtest basic => sub {
   plan tests => 1;
 
-  my $r = Alien::Builder::Retrievor->new;
-  isa_ok $r, 'Alien::Builder::Retrievor';
+  my $r = Alien::Builder::Retriever->new;
+  isa_ok $r, 'Alien::Builder::Retriever';
 
 };
 
@@ -21,11 +21,11 @@ subtest 'fetch all' => sub {
   my $uri = URI->new_abs('file/repo', $corpus);
   note "uri = $uri";
   
-  my $r = Alien::Builder::Retrievor->new(
+  my $r = Alien::Builder::Retriever->new(
     $uri
   );
   
-  isa_ok $r, 'Alien::Builder::Retrievor';
+  isa_ok $r, 'Alien::Builder::Retriever';
   
   my $dl = $r->retrieve;
   
@@ -33,7 +33,7 @@ subtest 'fetch all' => sub {
 
   is $dl->_filename, 'hello-1.02.tar.gz';
   is_deeply [map { $_->name } $r->_candidates], [qw( bar-1.00.tar.gz foo-1.00.tar.gz hello-1.00.tar.gz hello-1.02.tar.gz  )];
-  isa_ok(($r->_candidates)[0], 'Alien::Builder::Retrievor::Candidate');
+  isa_ok(($r->_candidates)[0], 'Alien::Builder::Retriever::Candidate');
 
 };
 
@@ -42,7 +42,7 @@ subtest 'candidate_class' => sub {
   my $uri = URI->new_abs('file/repo', $corpus);
   note "uri = $uri";
   
-  my $r = Alien::Builder::Retrievor->new(
+  my $r = Alien::Builder::Retriever->new(
     $uri => { candidate_class => 'My::Candidate' },
   );
   
@@ -57,7 +57,7 @@ subtest 'pattern' => sub {
   my $uri = URI->new_abs('file/repo', $corpus);
   note "uri = $uri";
   
-  my $r = Alien::Builder::Retrievor->new(
+  my $r = Alien::Builder::Retriever->new(
     $uri => { pattern => '^hello-(([0-9]+\.)*[0-9]+)\.tar\.gz$' },
   );
   
@@ -66,11 +66,11 @@ subtest 'pattern' => sub {
 
   is $dl->_filename, 'hello-1.02.tar.gz';
   is_deeply [map { $_->name } $r->_candidates], [qw( hello-1.00.tar.gz hello-1.02.tar.gz  )];
-  isa_ok(($r->_candidates)[0], 'Alien::Builder::Retrievor::Candidate');
+  isa_ok(($r->_candidates)[0], 'Alien::Builder::Retriever::Candidate');
 
 };
 
 package
   My::Candidate;
 
-use base qw( Alien::Builder::Retrievor::Candidate );
+use base qw( Alien::Builder::Retriever::Candidate );

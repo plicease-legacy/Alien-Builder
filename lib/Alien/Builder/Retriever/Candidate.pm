@@ -1,4 +1,4 @@
-package Alien::Builder::Retrievor::Candidate;
+package Alien::Builder::Retriever::Candidate;
 
 use strict;
 use warnings;

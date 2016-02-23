@@ -1,11 +1,11 @@
-package Alien::Builder::Retrievor;
+package Alien::Builder::Retriever;
 
 use strict;
 use warnings;
 use Alien::Builder;
 use Alien::Builder::Download;
 
-# ABSTRACT: Remote resource retrievor for Alien::Builder
+# ABSTRACT: Remote resource retriever for Alien::Builder
 # VERSION
 
 =head1 SYNOPSIS
@@ -64,7 +64,7 @@ sub _recurse
     
     my $can_class = Alien::Builder->_class(
       $selection->{candidate_class},
-      'Alien::Builder::Retrievor::Candidate',
+      'Alien::Builder::Retriever::Candidate',
     );
     
     my @can = map { $can_class->new($_ => $download->uri_for($_) ) } $download->list;

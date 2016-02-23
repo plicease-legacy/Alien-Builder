@@ -14,5 +14,5 @@ use_ok 'Alien::Builder::EnvLog';
 use_ok 'Alien::Builder::Extractor::Plugin::ArchiveTar';
 use_ok 'Alien::Builder::Interpolator';
 use_ok 'Alien::Builder::Interpolator::Classic';
-use_ok 'Alien::Builder::Retrievor';
-use_ok 'Alien::Builder::Retrievor::Candidate';
+use_ok 'Alien::Builder::Retriever';
+use_ok 'Alien::Builder::Retriever::Candidate';

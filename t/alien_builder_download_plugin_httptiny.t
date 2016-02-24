@@ -27,8 +27,8 @@ subtest listing => sub {
   plan tests => 2;
 
   my %tests = (
-    'with trailing slash'    => URI->new_abs("/file/repo/", $base_uri),
-    'without trailing slash' => URI->new_abs("/file/repo", $base_uri),
+    'with trailing slash'    => URI->new_abs("/file/repo1/", $base_uri),
+    'without trailing slash' => URI->new_abs("/file/repo1", $base_uri),
   );
 
   foreach my $test_name (keys %tests) {
@@ -58,7 +58,7 @@ subtest listing => sub {
 subtest file => sub {
 
   my $uri = $base_uri->clone;
-  $uri->path('/file/repo/hello-1.00.tar.gz');
+  $uri->path('/file/repo1/hello-1.00.tar.gz');
 
   my $download = Alien::Builder::Download::Plugin::HTTPTiny->get($uri);
   
@@ -74,10 +74,10 @@ subtest file => sub {
 subtest 'not found' => sub {
 
   my $uri = $base_uri->clone;
-  $uri->path('/file/repo/bogus');
+  $uri->path('/file/repo1/bogus');
   
   eval { Alien::Builder::Download::Plugin::HTTPTiny->get($uri) };
 
-  like $@, qr{^failed downloading http://localhost:[0-9]+/file/repo/bogus 404 Not Found}, 'diagnostic';
+  like $@, qr{^failed downloading http://localhost:[0-9]+/file/repo1/bogus 404 Not Found}, 'diagnostic';
 
 };

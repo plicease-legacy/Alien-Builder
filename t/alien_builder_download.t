@@ -27,7 +27,7 @@ subtest choose => sub {
 
 subtest get => sub {
 
-  my $uri = URI::file->new_abs('./corpus/file/repo/hello-1.00.tar.gz');
+  my $uri = URI::file->new_abs('./corpus/file/repo1/hello-1.00.tar.gz');
   my $download = Alien::Builder::Download->get($uri);
   
   isa_ok $download, 'Alien::Builder::Download::File';

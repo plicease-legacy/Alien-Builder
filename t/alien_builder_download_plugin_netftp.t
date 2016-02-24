@@ -28,8 +28,8 @@ subtest listing => sub {
   plan tests => 2;
 
   my %tests = (
-    'with trailing slash'    => URI->new_abs("file/repo/", $base_uri),
-    'without trailing slash' => URI->new_abs("file/repo", $base_uri),
+    'with trailing slash'    => URI->new_abs("file/repo1/", $base_uri),
+    'without trailing slash' => URI->new_abs("file/repo1", $base_uri),
   );
   
   foreach my $test_name (keys %tests) {
@@ -66,7 +66,7 @@ subtest listing => sub {
 subtest file => sub {
   plan tests => 4;
 
-  my $uri = URI->new_abs("file/repo/hello-1.00.tar.gz", $base_uri);
+  my $uri = URI->new_abs("file/repo1/hello-1.00.tar.gz", $base_uri);
   
   my $download = Alien::Builder::Download::Plugin::NetFTP->get($uri);
   isa_ok $download, 'Alien::Builder::Download::File';

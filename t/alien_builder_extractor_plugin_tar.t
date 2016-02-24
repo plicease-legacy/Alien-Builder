@@ -10,7 +10,7 @@ subtest normal => sub {
   plan tests => 3;
 
   my $download = Alien::Builder::Download::Plugin::Local->get(
-    URI::file->new_abs('corpus/file/repo/hello-1.00.tar.gz')
+    URI::file->new_abs('corpus/file/repo1/hello-1.00.tar.gz')
   );
   
   my $dir = tempdir( CLEANUP => 1 );
@@ -30,7 +30,7 @@ subtest 'with bogus symlink' => sub {
   plan tests => 3;
 
   my $download = Alien::Builder::Download::Plugin::Local->get(
-    URI::file->new_abs('corpus/file/repo/hello-1.02.tar.gz')
+    URI::file->new_abs('corpus/file/repo1/hello-1.02.tar.gz')
   );
   
   my $dir = tempdir( CLEANUP => 1 );
@@ -53,7 +53,7 @@ subtest 'with files in root' => sub {
   plan tests => 7;
 
   my $download = Alien::Builder::Download::Plugin::Local->get(
-    URI::file->new_abs('corpus/file/repo/bar-1.00.tar.gz')
+    URI::file->new_abs('corpus/file/repo1/bar-1.00.tar.gz')
   );
   
   my $dir = tempdir( CLEANUP => 1 );

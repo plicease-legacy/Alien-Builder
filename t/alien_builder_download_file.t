@@ -7,7 +7,7 @@ use Alien::Builder::Download::File;
 subtest localfile => sub {
   plan tests => 4;
 
-  my $original_filename = 'corpus/file/repo/hello-1.00.tar.gz';
+  my $original_filename = 'corpus/file/repo1/hello-1.00.tar.gz';
   my $content = do {
     open my $fh, '<', $original_filename;
     local $/;

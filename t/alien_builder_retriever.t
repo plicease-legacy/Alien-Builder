@@ -14,11 +14,11 @@ subtest basic => sub {
 };
 
 my $corpus = URI::file->new_abs('corpus/');
-# corpus/file/repo/
+# corpus/file/repo1/
 
 subtest 'fetch all' => sub {
 
-  my $uri = URI->new_abs('file/repo', $corpus);
+  my $uri = URI->new_abs('file/repo1', $corpus);
   note "uri = $uri";
   
   my $r = Alien::Builder::Retriever->new(
@@ -39,7 +39,7 @@ subtest 'fetch all' => sub {
 
 subtest 'candidate_class' => sub {
   
-  my $uri = URI->new_abs('file/repo', $corpus);
+  my $uri = URI->new_abs('file/repo1', $corpus);
   note "uri = $uri";
   
   my $r = Alien::Builder::Retriever->new(
@@ -54,7 +54,7 @@ subtest 'candidate_class' => sub {
 
 subtest 'pattern' => sub {
 
-  my $uri = URI->new_abs('file/repo', $corpus);
+  my $uri = URI->new_abs('file/repo1', $corpus);
   note "uri = $uri";
   
   my $r = Alien::Builder::Retriever->new(

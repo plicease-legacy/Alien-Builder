@@ -19,10 +19,11 @@ use 5.008001;
 
 =head1 SYNOPSIS
 
- use ExtUtils::MakeMaker;
- use Alien::Builder::MM;
- 
- my $ab = Alien::Builder::MM->new(
+Create a simple instance:
+
+ use Alien::Builder;
+
+ my $ab = Alien::Builder->new(
    name => 'foo',
    retreiver => [
      'http://example.com/dist/' => {
@@ -32,6 +33,29 @@ use 5.008001;
    # these are the default command lists
    build_commands => [ '%c --prefix=%s', 'make' ],
    install_commands => [ 'make install' ],
+ );
+
+Install standalone:
+
+ use Alien::Builder;
+ 
+ my $ab = Alien::Builder->new(
+   # same as above
+ );
+ 
+ $ab->action_download
+    ->action_extract
+    ->action_build
+    ->action_test
+    ->action_install;
+
+Deploy with L<ExtUtils::MakeMaker>:
+
+ use ExtUtils::MakeMaker;
+ use Alien::Builder::MM;
+ 
+ my $ab = Alien::Builder::MM->new(
+   # same as above
  );
  
  WriteMakefile(
@@ -44,6 +68,8 @@ use 5.008001;
  sub MY::postamble {
    $ab->mm_postamble;
  }
+
+Deploy with L<Module::Build>, see L<Alien::Base::ModuleBuild>.
 
 =head1 DESCRIPTION
 

@@ -1,0 +1,17 @@
+- Generate hash of build requires
+  - AB::MM will use this in AB::MM->mm_args
+  - AB::MB will use this in AB::MB->new
+- Create share_dir
+- Create Alien::Foo::Install::Files.pm
+- touch blib/arch/auto/Alien/Foo.txt if arch=1
+- detect install type and only build from source when install type = share
+  - populate $builder->{config}->{version}
+  - populate $builder->{config}->{original_prefix}
+  - AB::MB all this happens in ACTION_alien_code
+- isolate dynamic
+- determine correct value for %s
+- support a double staged DISTDIR install
+- populate $builder->{config}->{pkgconfig}
+  - see AB::MB->alien_load_pkgconfig
+- alien_relocation_fixup
+  - needed on OS X only

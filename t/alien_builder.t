@@ -106,6 +106,8 @@ subtest bin_requires => sub {
         'Alien::Foo' => 0,
         'Alien::Bar' => '1.234',
       }, 'matches';
+      is $builder->alien_build_requires->{'Alien::Foo'}, 0;
+      is $builder->alien_build_requires->{'Alien::Bar'}, '1.234';
 
     };
   };
@@ -117,6 +119,7 @@ subtest bin_requires => sub {
     
       my $builder = Alien::Builder->new;
       is_deeply $builder->bin_requires, { 'Alien::MSYS' => 0 }, 'bin requires has Alien::MSYS';
+      is $builder->alien_build_requires->{'Alien::MSYS'}, 0;
     
     };
 
@@ -134,6 +137,10 @@ subtest bin_requires => sub {
         'Alien::MSYS' => 0,
       }, 'matches';
 
+      is $builder->alien_build_requires->{'Alien::Foo'}, 0;
+      is $builder->alien_build_requires->{'Alien::Bar'}, '1.234';
+      is $builder->alien_build_requires->{'Alien::MSYS'}, 0;
+
     };
 
     subtest 'some values sans MSYS' => sub {
@@ -149,6 +156,10 @@ subtest bin_requires => sub {
         'Alien::Foo' => 0,
         'Alien::Bar' => '1.234',
       }, 'matches';
+
+      is $builder->alien_build_requires->{'Alien::Foo'}, 0;
+      is $builder->alien_build_requires->{'Alien::Bar'}, '1.234';
+      is $builder->alien_build_requires->{'Alien::MSYS'}, undef;
 
     };
   };
@@ -319,6 +330,7 @@ subtest 'env' => sub {
         FOO => '%f',
         BAR => undef,
       },
+      version_check => 'false',
     );
     
     is $builder->env->{FOO}, 'foo', 'FOO=foo';
@@ -665,6 +677,7 @@ subtest destdir => sub {
     my $builder = Alien::Builder->new;
     is $builder->dest_dir, undef;
     is $builder->env->{DESTDIR}, undef;
+    is $builder->alien_build_requires->{'File::Copy::Recursive'}, undef;
   };
 
   subtest default => sub {
@@ -674,6 +687,7 @@ subtest destdir => sub {
     mkdir($builder->dest_dir);
     ok -d $builder->dest_dir, 'is creatable';
     is $builder->env->{DESTDIR}, $builder->dest_dir;
+    is $builder->alien_build_requires->{'File::Copy::Recursive'}, 0;
   };
 
 };

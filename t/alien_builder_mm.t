@@ -2,6 +2,9 @@ use strict;
 use warnings;
 use Test::More tests => 1;
 use Alien::Builder::MM;
+use File::Temp qw( tempdir );
+
+$Alien::Builder::BUILD_DIR = tempdir( CLEANUP => 1 );
 
 subtest basic => sub {
 

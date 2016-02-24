@@ -135,8 +135,33 @@ sub new
   }, $class;
 
   $self->{config}->{inline_auto_include} = $self->inline_auto_include;
-  $self->{config}->{name} = $self->name;
-  $self->{config}->{ffi_name} = $self->ffi_name;
+  $self->{config}->{name}                = $self->name;
+  $self->{config}->{ffi_name}            = $self->ffi_name;
+  $self->{config}->{msys}                = $self->msys;
+
+  if($self->install_type eq 'share')
+  {
+    if($self->msys)
+    {
+      $self->{build_requires}->{'Alien::MSYS'} = 0;
+    }
+    
+    if($self->dest_dir)
+    {
+      # TODO: which version is best?
+      $self->{build_requires}->{'File::Copy::Recursive'} = 0;
+    }
+  
+    foreach my $tool (keys %{ $self->bin_requires })
+    {
+      my $version = $self->bin_requires->{$tool};
+      if($tool eq 'Alien::CMake' && $version < 0.07)
+      {
+        $version = '0,07';
+      }
+      $self->{build_requires}->{$tool} = $version;
+    }
+  }
 
   $self;
 }
@@ -847,6 +872,20 @@ sub action_fake
   }
 }
 
+=head2 alien_build_requires
+
+ my $hash = $builder->alien_build_requires
+
+Returns hash of build requirements.
+
+=cut
+
+sub alien_build_requires
+{
+  my($self) = @_;
+  $self->{build_requires};
+}
+
 =head2 alien_check_installed_version
 
  my $version = $builder->alien_check_installed_version;
@@ -864,10 +903,10 @@ package you are building does not use C<pkg-config>.
 sub alien_check_installed_version
 {
   my($self) = @_;
-  my $command = $self->version_check;
-  my %result = $self->alien_do_system($command, { verbose => 0 });
-  my $version = ($result{success} && $result{stdout}) || 0;
-  return $version;
+  return eval {
+    my %result = $self->alien_do_system($self->version_check, { verbose => 0 });
+    ($result{success} && $result{stdout}) || 0;
+  };
 }
 
 =head2 alien_check_built_version
@@ -975,7 +1014,7 @@ sub save
   $filename ||= 'alien_builder.json';
   my $fh;
   open($fh, '>', $filename) || die "unable to write $filename $!";
-  print $fh encode_json({ init => $self->{init}, config => $self->{config}, class => ref($self) });
+  print $fh encode_json({ init => $self->{init}, config => $self->{config}, class => ref($self), alien => $self->{alien} });
   close $fh;
   $self;
 }
@@ -1037,6 +1076,26 @@ sub _env_log
   my($self) = @_;
   $self->env;
   $self->{env_log};
+}
+
+sub build_prop_install_type
+{
+  my($self) = @_;
+  
+  $self->{config}->{install_type} ||= do {
+  
+    if(($ENV{ALIEN_INSTALL_TYPE} || 'system') eq 'system' && $self->alien_check_installed_version)
+    {
+      return $self->{config}->{install_type} = 'system';
+    }
+  
+    if(($ENV{ALIEN_INSTALL_TYPE} || 'share') eq 'share')
+    {
+      return $self->{config}->{install_type} = 'share';
+    }
+  
+    die "TODO message";
+  };
 }
 
 # private methods

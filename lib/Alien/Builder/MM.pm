@@ -23,6 +23,9 @@ sub mm_args
   
   $args{PREREQ_PM}->{'File::ShareDir'} ||= '1.00';
   
+  my %build_requires = (%{ $self->alien_build_requires }, %{ $args{BUILD_REQUIRES} || {} });
+  $args{BUILD_REQUIRES} = \%build_requires;
+  
   %args;
 }
 

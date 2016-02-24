@@ -2,7 +2,7 @@ package Alien::Builder::Interpolator;
 
 use strict;
 use warnings;
-use Carp qw( croak );
+use Carp qw( croak carp );
 
 # ABSTRACT: Interpolate variables and helpers
 # VERSION
@@ -35,6 +35,13 @@ sub new
   my %vars = %{ $args{vars} || {} };
   my %helpers = %{ $args{helpers} || {} };
   $vars{'%'} = '%';  
+
+  unless(defined $vars{n})
+  {
+    $DB::single = 1;
+    print "here\n";
+  }  
+  
   bless {
     vars => \%vars,
     helpers => \%helpers,

@@ -138,6 +138,7 @@ sub new
   $self->{config}->{name}                = $self->name;
   $self->{config}->{ffi_name}            = $self->ffi_name;
   $self->{config}->{msys}                = $self->msys;
+  $self->{config}->{original_prefix}     = $self->prefix;
 
   if($self->install_type eq 'share')
   {
@@ -167,14 +168,15 @@ sub new
 }
 
 # public properties
-# - properties are specifie dby the caller by passing in key/value pairs
+# - properties are specifie by the caller by passing in key/value pairs
 #   to the construtor.  The values should be strings, lists of hash references
 #   no sub references and no objects!
 # - These are stored by the constructor into the "init" hash.
 # - The "init" hash is read only, actual properties might manifest at run time
 #   as objects and/or default values.  These derivitive forms will be stored
 #   in "prop_cache" hash.
-# - You should NEVER write to the init hash.
+# - Only new should write into the "init" hash.
+# - Only the build_prop_ methods should write into the "prop_cache" hash.
 # - Conversion from a "init" property to a "prop_cache" property should be
 #   deterministic, so that a given builder object can be completely and
 #   deterministically recreated from just the arguments passed into new.
@@ -775,6 +777,7 @@ Action that downloads the archive.
 sub action_download
 {
   my($self) = @_;
+  return unless $self->install_type eq 'share';
   $self->{config}->{working_download} = $self->retriever->retrieve->copy_to($self->build_dir);
   $self;
 }
@@ -790,6 +793,7 @@ Action that extracts the archive.
 sub action_extract
 {
   my($self) = @_;
+  return unless $self->install_type eq 'share';
   $self->{config}->{working_dir} = $self->extractor->extract($self->{config}->{working_download}, $self->build_dir);
   $self;
 }
@@ -805,6 +809,7 @@ Action that builds the library.  Executes commands as specified by L</build_comm
 sub action_build
 {
   my($self) = @_;
+  return unless $self->install_type eq 'share';
   local $CWD = $self->{config}->{working_dir};
   print "+ cd $CWD\n";
   $self->build_commands->execute;
@@ -822,6 +827,7 @@ Action that tests the library.  Executes commands as specified by L</test_comman
 sub action_test
 {
   my($self) = @_;
+  return unless $self->install_type eq 'share';
   local $CWD = $self->{config}->{working_dir};
   print "+ cd $CWD\n";
   $self->test_commands->execute;
@@ -839,10 +845,30 @@ Action that installs the library.  Executes commands as specified by L</install_
 sub action_install
 {
   my($self) = @_;
+  return unless $self->install_type eq 'share';
   local $CWD = $self->{config}->{working_dir};
   print "+ cd $CWD\n";
   $self->install_commands->execute;
   $self;
+}
+
+=head2 action_postinstall
+
+=cut
+
+sub action_postinstall
+{
+  my($self) = @_;
+  return unless $self->install_type eq 'share';
+  
+  # TODO:
+  # - touch blib/arch/auto/Alien/Foo.txt if archi = 1
+  # - create blib sharedir/alien_builder.json
+  # - populate $builder->{config}->{pkgconfig} (see AB::MB->alien_load_pkgconfig)
+  # - alien_relocation_fixup (for OS X)
+  # - isolate dynamic
+  
+  # - create Alien::Foo::Install::Files.pm (here or elsewhere?)
 }
 
 =head2 action_fake
@@ -936,6 +962,9 @@ provide an implementation for this method.
 sub alien_check_built_version
 {
   my($self) = @_;
+  # TODO: try to get the version number from pkgconfig
+  # TODO: try to determine version number from directory (foo-1.00 should imply version 1.00)
+  # TODO: populate $builder->{config}->{version};
   return;
 }
 
@@ -1084,9 +1113,13 @@ sub build_prop_install_type
   
   $self->{config}->{install_type} ||= do {
   
-    if(($ENV{ALIEN_INSTALL_TYPE} || 'system') eq 'system' && $self->alien_check_installed_version)
+    if(($ENV{ALIEN_INSTALL_TYPE} || 'system') eq 'system')
     {
-      return $self->{config}->{install_type} = 'system';
+      if(my $version = $self->alien_check_installed_version)
+      {
+        $self->{config}->{version} = $version;
+        return $self->{config}->{install_type} = 'system';
+      }
     }
   
     if(($ENV{ALIEN_INSTALL_TYPE} || 'share') eq 'share')

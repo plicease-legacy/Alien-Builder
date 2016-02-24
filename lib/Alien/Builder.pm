@@ -49,7 +49,7 @@ Install standalone:
     ->action_test
     ->action_install;
 
-Deploy with L<ExtUtils::MakeMaker>:
+Deploy with L<ExtUtils::MakeMaker> (see L<Alien::Builder::MM> for more details):
 
  use ExtUtils::MakeMaker;
  use Alien::Builder::MM;
@@ -72,6 +72,8 @@ Deploy with L<ExtUtils::MakeMaker>:
 Deploy with L<Module::Build>, see L<Alien::Base::ModuleBuild>.
 
 =head1 DESCRIPTION
+
+B<WARNING>: this interface is B<EXPERIMENTAL>.
 
 The purpose of this class is to provide a generic builder/installer that can be used
 by L<ExtUtils::MakeMaker> and L<Module::Build> derivatives for creating L<Alien>

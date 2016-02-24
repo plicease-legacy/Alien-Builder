@@ -34,7 +34,7 @@ Install standalone:
        ->action_test
        ->action_install;
 
-Deploy with [ExtUtils::MakeMaker](https://metacpan.org/pod/ExtUtils::MakeMaker):
+Deploy with [ExtUtils::MakeMaker](https://metacpan.org/pod/ExtUtils::MakeMaker) (see [Alien::Builder::MM](https://metacpan.org/pod/Alien::Builder::MM) for more details):
 
     use ExtUtils::MakeMaker;
     use Alien::Builder::MM;
@@ -57,6 +57,8 @@ Deploy with [ExtUtils::MakeMaker](https://metacpan.org/pod/ExtUtils::MakeMaker):
 Deploy with [Module::Build](https://metacpan.org/pod/Module::Build), see [Alien::Base::ModuleBuild](https://metacpan.org/pod/Alien::Base::ModuleBuild).
 
 # DESCRIPTION
+
+**WARNING**: this interface is **EXPERIMENTAL**.
 
 The purpose of this class is to provide a generic builder/installer that can be used
 by [ExtUtils::MakeMaker](https://metacpan.org/pod/ExtUtils::MakeMaker) and [Module::Build](https://metacpan.org/pod/Module::Build) derivatives for creating [Alien](https://metacpan.org/pod/Alien)

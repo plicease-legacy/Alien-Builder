@@ -369,12 +369,20 @@ Action that tests the library.  Executes commands as specified by ["test\_comman
 
 Action that installs the library.  Executes commands as specified by ["install\_commands"](#install_commands).
 
+## action\_postinstall
+
 ## action\_fake
 
     $builder->action_fake;
 
 Action that prints the commands that _would_ be executed during the build, test and install
 stages.
+
+## alien\_build\_requires
+
+    my $hash = $builder->alien_build_requires
+
+Returns hash of build requirements.
 
 ## alien\_check\_installed\_version
 

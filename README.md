@@ -278,7 +278,7 @@ in the form to be passed to `pkg-config`.
 ## prefix
 
 The install prefix to use.  If you are using one of the MakeMaker or
-ModuleBuild interfaces, then this will likely be specified for you.
+Module::Build interfaces, then this will likely be specified for you.
 
 ## provides\_cflags
 

@@ -15,6 +15,7 @@ pod_spelling_system:
     - integrators
     - unsets
     - autotools
+    - destdir
 
 pod_coverage:
   skip: 0

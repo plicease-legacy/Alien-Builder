@@ -618,7 +618,7 @@ sub build_prop_name
 =head2 prefix
 
 The install prefix to use.  If you are using one of the MakeMaker or
-ModuleBuild interfaces, then this will likely be specified for you.
+Module::Build interfaces, then this will likely be specified for you.
 
 =cut
 

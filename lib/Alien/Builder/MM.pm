@@ -26,4 +26,14 @@ sub mm_args
   %args;
 }
 
+=head2 mm_postamble
+
+=cut
+
+sub mm_postamble
+{
+  my($self) = @_;
+  '';
+}
+
 1;

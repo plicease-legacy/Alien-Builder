@@ -19,7 +19,45 @@ use 5.008001;
 
 =head1 SYNOPSIS
 
+ use ExtUtils::MakeMaker;
+ use Alien::Builder::MM;
+ 
+ my $ab = Alien::Builder::MM->new(
+   name => 'foo',
+   retreiver => [
+     'http://example.com/dist/' => {
+       pattern => qr{^libfoo-(([0-9]\.)*[0-9]+)\.tar\.gz$},
+     },
+   ],
+   # these are the default command lists
+   build_commands => [ '%c --prefix=%s', 'make' ],
+   install_commands => [ 'make install' ],
+ );
+ 
+ WriteMakefile(
+   $ab->mm_args(
+     NAME => 'Alien::Foo',
+     VERSION_FROM => 'Alien::Foo'
+   ),
+ );
+ 
+ sub MY::postamble {
+   $ab->mm_postamble;
+ }
+
 =head1 DESCRIPTION
+
+The purpose of this class is to provide a generic builder/installer that can be used
+by L<ExtUtils::MakeMaker> and L<Module::Build> derivatives for creating L<Alien>
+distributions.  Basically this class provides the generic machinery used during the
+configure and build stages, and L<Alien::Base> can be used at runtime once the L<Alien>
+module is already installed.  It could also be used independently of an installer to
+install a library.
+
+The design goals of this library are to make the "easy" things easy, and hard things
+possible.  For this discussion, "easy" means build and install libraries that use
+the standard GNU style autotools, or generic Makefiles.  Harder things may require
+writing Perl code, and you can accomplish this by subclassing L<Alien::Builder>.
 
 =head1 CONSTRUCTOR
 
@@ -547,6 +585,31 @@ sub build_prop_provides_libs
 
 =head2 retriever
 
+An array reference that specifies the retrieval of your libraries
+archive.  Usually this is a URL, followed by a sequence of one or
+more selection specifications.  For example for a simple directory
+that contains multiple tarballs:
+
+ # finds the newest version of http://example.com/dist/libfoo-$VERSION.tar.gz
+ my $builder = Alien::Builder->new(
+   retriever => [ 
+     'http://example.com/dist/' => 
+     { pattern => qr{^libfoo-[0-9]+\.[0-9]+\.tar\.gz$} },
+   ],
+ );
+
+If you have multiple directory hierarchy, you can handle this by
+extra selection specifications:
+
+ # finds the newest version of http://example.com/dist/$VERSION/libfoo-$VERSION.tar.gz
+ my $builder = Alien::Builder->new(
+   retriever => [ 
+     'http://example.com/dist/' => 
+     { pattern => qr{^v[0-9]+$} },
+     { pattern => qr{^libfoo-[0-9]+\.[0-9]+\.tar\.gz$} },
+   ],
+ );
+
 =cut
 
 sub build_prop_retriever
@@ -556,6 +619,9 @@ sub build_prop_retriever
 }
 
 =head2 retriever_class
+
+The class used to do the actual retrieval.  This allows you to write your own
+custom retriever if the build in version does not provide enough functionality.
 
 =cut
 
@@ -606,6 +672,10 @@ sub build_prop_version_check
 
 =head2 action_download
 
+ $builder->action_download;
+
+Action that downloads the archive.
+
 =cut
 
 sub action_download
@@ -617,6 +687,10 @@ sub action_download
 
 =head2 action_extract
 
+ $builder->action_extract;
+
+Action that extracts the archive.
+
 =cut
 
 sub action_extract
@@ -627,6 +701,10 @@ sub action_extract
 }
 
 =head2 action_build
+
+ $builder->action_build;
+
+Action that builds the library.  Executes commands as specified by L</build_commands>.
 
 =cut
 
@@ -641,6 +719,10 @@ sub action_build
 
 =head2 action_test
 
+ $builder->action_test;
+
+Action that tests the library.  Executes commands as specified by L</test_commands>.
+
 =cut
 
 sub action_test
@@ -654,6 +736,10 @@ sub action_test
 
 =head2 action_install
 
+ $builder->action_install;
+
+Action that installs the library.  Executes commands as specified by L</install_commands>.
+
 =cut
 
 sub action_install
@@ -666,6 +752,11 @@ sub action_install
 }
 
 =head2 action_fake
+
+ $builder->action_fake;
+
+Action that prints the commands that I<would> be executed during the build, test and install
+stages.
 
 =cut
 
@@ -803,6 +894,10 @@ sub alien_do_system
 
 =head2 save
 
+ $builder->save;
+
+Saves the state information of that L<Alien::Builder> instance.
+
 =cut
 
 sub save
@@ -817,6 +912,10 @@ sub save
 }
 
 =head2 restore
+
+ Alien::Builder->restore;
+
+Restores an L<Alien::Builder> instance from the state information saved by L</save>.
 
 =cut
 
@@ -834,7 +933,7 @@ sub restore
   $self;
 }
 
-# Private properties and methods
+# Private properties
 
 sub _alien_do_system_for_command_list
 {

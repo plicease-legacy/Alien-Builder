@@ -4,7 +4,45 @@ Base classes for Alien builder modules
 
 # SYNOPSIS
 
+    use ExtUtils::MakeMaker;
+    use Alien::Builder::MM;
+    
+    my $ab = Alien::Builder::MM->new(
+      name => 'foo',
+      retreiver => [
+        'http://example.com/dist/' => {
+          pattern => qr{^libfoo-(([0-9]\.)*[0-9]+)\.tar\.gz$},
+        },
+      ],
+      # these are the default command lists
+      build_commands => [ '%c --prefix=%s', 'make' ],
+      install_commands => [ 'make install' ],
+    );
+    
+    WriteMakefile(
+      $ab->mm_args(
+        NAME => 'Alien::Foo',
+        VERSION_FROM => 'Alien::Foo'
+      ),
+    );
+    
+    sub MY::postamble {
+      $ab->mm_postamble;
+    }
+
 # DESCRIPTION
+
+The purpose of this class is to provide a generic builder/installer that can be used
+by [ExtUtils::MakeMaker](https://metacpan.org/pod/ExtUtils::MakeMaker) and [Module::Build](https://metacpan.org/pod/Module::Build) derivatives for creating [Alien](https://metacpan.org/pod/Alien)
+distributions.  Basically this class provides the generic machinery used during the
+configure and build stages, and [Alien::Base](https://metacpan.org/pod/Alien::Base) can be used at runtime once the [Alien](https://metacpan.org/pod/Alien)
+module is already installed.  It could also be used independently of an installer to
+install a library.
+
+The design goals of this library are to make the "easy" things easy, and hard things
+possible.  For this discussion, "easy" means build and install libraries that use
+the standard GNU style autotools, or generic Makefiles.  Harder things may require
+writing Perl code, and you can accomplish this by subclassing [Alien::Builder](https://metacpan.org/pod/Alien::Builder).
 
 # CONSTRUCTOR
 
@@ -207,7 +245,35 @@ files and header files. They both are empty by default.
 
 ## retriever
 
+An array reference that specifies the retrieval of your libraries
+archive.  Usually this is a URL, followed by a sequence of one or
+more selection specifications.  For example for a simple directory
+that contains multiple tarballs:
+
+    # finds the newest version of http://example.com/dist/libfoo-$VERSION.tar.gz
+    my $builder = Alien::Builder->new(
+      retriever => [ 
+        'http://example.com/dist/' => 
+        { pattern => qr{^libfoo-[0-9]+\.[0-9]+\.tar\.gz$} },
+      ],
+    );
+
+If you have multiple directory hierarchy, you can handle this by
+extra selection specifications:
+
+    # finds the newest version of http://example.com/dist/$VERSION/libfoo-$VERSION.tar.gz
+    my $builder = Alien::Builder->new(
+      retriever => [ 
+        'http://example.com/dist/' => 
+        { pattern => qr{^v[0-9]+$} },
+        { pattern => qr{^libfoo-[0-9]+\.[0-9]+\.tar\.gz$} },
+      ],
+    );
+
 ## retriever\_class
+
+The class used to do the actual retrieval.  This allows you to write your own
+custom retriever if the build in version does not provide enough functionality.
 
 ## test\_commands
 
@@ -228,13 +294,40 @@ system.  The default is `pkg-config --modversion %n`.
 
 ## action\_download
 
+    $builder->action_download;
+
+Action that downloads the archive.
+
 ## action\_extract
+
+    $builder->action_extract;
+
+Action that extracts the archive.
 
 ## action\_build
 
+    $builder->action_build;
+
+Action that builds the library.  Executes commands as specified by ["build\_commands"](#build_commands).
+
 ## action\_test
 
+    $builder->action_test;
+
+Action that tests the library.  Executes commands as specified by ["test\_commands"](#test_commands).
+
 ## action\_install
+
+    $builder->action_install;
+
+Action that installs the library.  Executes commands as specified by ["install\_commands"](#install_commands).
+
+## action\_fake
+
+    $builder->action_fake;
+
+Action that prints the commands that _would_ be executed during the build, test and install
+stages.
 
 ## alien\_check\_installed\_version
 
@@ -284,7 +377,15 @@ Returns a set of key value pairs including `stdout`, `stderr`,
 
 ## save
 
+    $builder->save;
+
+Saves the state information of that [Alien::Builder](https://metacpan.org/pod/Alien::Builder) instance.
+
 ## restore
+
+    Alien::Builder->restore;
+
+Restores an [Alien::Builder](https://metacpan.org/pod/Alien::Builder) instance from the state information saved by ["save"](#save).
 
 # ENVIRONMENT
 

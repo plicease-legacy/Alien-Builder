@@ -69,6 +69,8 @@ sub new
   }, $class;
 
   $self->{config}->{inline_auto_include} = $self->inline_auto_include;
+  $self->{config}->{name} = $self->name;
+  $self->{config}->{ffi_name} = $self->ffi_name;
 
   $self;
 }

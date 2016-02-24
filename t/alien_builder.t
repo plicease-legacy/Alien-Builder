@@ -5,8 +5,9 @@ use File::chdir;
 use Alien::Builder;
 use File::Temp qw( tempdir );
 use Config;
-use Test::More tests => 24;
-use Capture::Tiny qw( capture );
+use Test::More tests => 26;
+use Capture::Tiny qw( capture capture_merged );
+use URI::file;
 
 $Alien::Builder::BUILD_DIR = tempdir( CLEANUP => 1 );
 
@@ -26,7 +27,7 @@ subtest 'autoconf' => sub {
 
     my $builder = Alien::Builder->new;
     ok !!$builder->_autoconf, '_autoconf is on';
-    ok !!$builder->alien_prop_msys, '_msys is on';
+    ok !!$builder->msys, '_msys is on';
 
   };
 
@@ -38,7 +39,7 @@ subtest 'autoconf' => sub {
     );
 
     ok !$builder->_autoconf, '_autoconf is off';
-    ok !$builder->alien_prop_msys, '_msys is off';
+    ok !$builder->msys, '_msys is off';
   
   };
   
@@ -53,7 +54,7 @@ subtest 'autoconf' => sub {
       );
     
       ok !!$builder->_autoconf, '_autoconf is on';
-      ok !!$builder->alien_prop_msys, '_msys is on';
+      ok !!$builder->msys, '_msys is on';
     };
     
     subtest list => sub {
@@ -64,7 +65,7 @@ subtest 'autoconf' => sub {
       );
     
       ok !!$builder->_autoconf, '_autoconf is on';
-      ok !!$builder->alien_prop_msys, '_msys is on';
+      ok !!$builder->msys, '_msys is on';
     };
   
   };
@@ -83,7 +84,7 @@ subtest msys => sub {
     );
 
     ok !$builder->_autoconf, '_autoconf is off';
-    ok !!$builder->alien_prop_msys, '_msys is on';
+    ok !!$builder->msys, '_msys is on';
     
   
   };
@@ -97,7 +98,7 @@ subtest msys => sub {
     );
 
     ok !$builder->_autoconf, '_autoconf is off';
-    ok !$builder->alien_prop_msys, '_msys is off';
+    ok !$builder->msys, '_msys is off';
     
   
   };
@@ -115,7 +116,7 @@ subtest bin_requires => sub {
       plan tests => 1;
     
       my $builder = Alien::Builder->new;
-      is_deeply $builder->alien_prop_bin_requires, {}, 'bin requires is empty';
+      is_deeply $builder->bin_requires, {}, 'bin requires is empty';
     
     };
     
@@ -128,7 +129,7 @@ subtest bin_requires => sub {
           'Alien::Bar' => '1.234',
         },
       );
-      is_deeply $builder->alien_prop_bin_requires, {
+      is_deeply $builder->bin_requires, {
         'Alien::Foo' => 0,
         'Alien::Bar' => '1.234',
       }, 'matches';
@@ -144,7 +145,7 @@ subtest bin_requires => sub {
       plan tests => 1;
     
       my $builder = Alien::Builder->new;
-      is_deeply $builder->alien_prop_bin_requires, { 'Alien::MSYS' => 0 }, 'bin requires has Alien::MSYS';
+      is_deeply $builder->bin_requires, { 'Alien::MSYS' => 0 }, 'bin requires has Alien::MSYS';
     
     };
 
@@ -157,7 +158,7 @@ subtest bin_requires => sub {
           'Alien::Bar' => '1.234',
         },
       );
-      is_deeply $builder->alien_prop_bin_requires, {
+      is_deeply $builder->bin_requires, {
         'Alien::Foo' => 0,
         'Alien::Bar' => '1.234',
         'Alien::MSYS' => 0,
@@ -175,7 +176,7 @@ subtest bin_requires => sub {
           'Alien::Bar' => '1.234',
         },
       );
-      is_deeply $builder->alien_prop_bin_requires, {
+      is_deeply $builder->bin_requires, {
         'Alien::Foo' => 0,
         'Alien::Bar' => '1.234',
       }, 'matches';
@@ -220,7 +221,7 @@ subtest 'interpolator' => sub {
 
   subtest default => sub {
     plan tests => 2;
-    my $intr = Alien::Builder->new->alien_prop_interpolator;
+    my $intr = Alien::Builder->new->interpolator;
     isa_ok $intr, 'Alien::Builder::Interpolator::Default';
     isa_ok $intr, 'Alien::Builder::Interpolator';
   };
@@ -229,7 +230,7 @@ subtest 'interpolator' => sub {
     plan tests => 1;
     my $intr = Alien::Builder->new(
       interpolator => 'Alien::Builder::Interpolator::Foo',
-    )->alien_prop_interpolator;
+    )->interpolator;
     isa_ok $intr, 'Alien::Builder::Interpolator::Foo';
   };
 
@@ -237,7 +238,7 @@ subtest 'interpolator' => sub {
     plan tests => 1;
     my $intr = Alien::Builder->new(
       interpolator => 'Foo',
-    )->alien_prop_interpolator;
+    )->interpolator;
     isa_ok $intr, 'Alien::Builder::Interpolator::Foo';
   };
 
@@ -248,21 +249,21 @@ subtest 'extractor' => sub {
 
   subtest default => sub {
     plan tests => 2;
-    my $xtor = Alien::Builder->new->alien_prop_extractor;
+    my $xtor = Alien::Builder->new->extractor;
     is $xtor, 'Alien::Builder::Extractor::Plugin::ArchiveTar';
     ok $xtor->can('extract'), 'can extract';
   };
 
   subtest 'fully qualified' => sub {
     plan tests => 2;
-    my $xtor = Alien::Builder->new( extractor => 'Alien::Builder::Extractor::Plugin::Foo' )->alien_prop_extractor;
+    my $xtor = Alien::Builder->new( extractor => 'Alien::Builder::Extractor::Plugin::Foo' )->extractor;
     is $xtor, 'Alien::Builder::Extractor::Plugin::Foo';
     ok $xtor->can('extract'), 'can extract';
   };
 
   subtest 'abbreviated' => sub {
     plan tests => 2;
-    my $xtor = Alien::Builder->new( extractor => 'Foo' )->alien_prop_extractor;
+    my $xtor = Alien::Builder->new( extractor => 'Foo' )->extractor;
     is $xtor, 'Alien::Builder::Extractor::Plugin::Foo';
     ok $xtor->can('extract'), 'can extract';
   };
@@ -277,7 +278,7 @@ subtest 'env' => sub {
   
     my $builder = Alien::Builder->new;
 
-    my %env = %{ $builder->alien_prop_env };
+    my %env = %{ $builder->env };
     
     my $config_site = delete $env{CONFIG_SITE};
     
@@ -298,7 +299,7 @@ subtest 'env' => sub {
       build_commands => [],
     );
     
-    is_deeply $builder->alien_prop_env, {}, 'empty env';
+    is_deeply $builder->env, {}, 'empty env';
   
   };
   
@@ -324,7 +325,7 @@ subtest 'env' => sub {
             $name => 0
           },
         );
-        my %path = map { $_ => 1 } split $Config{path_sep}, $builder->alien_prop_env->{PATH};
+        my %path = map { $_ => 1 } split $Config{path_sep}, $builder->env->{PATH};
         ok $_, "$_ is in PATH" for @$test;
       };
     }
@@ -338,7 +339,7 @@ subtest 'env' => sub {
       
       my $builder = Alien::Builder->new( bin_requires => { 'Alien::Bogus' => 0 } );
       
-      eval { $builder->alien_prop_env };
+      eval { $builder->env };
       like $@, qr{Bogus\.pm}, 'dies with message';
     
     };
@@ -348,7 +349,7 @@ subtest 'env' => sub {
 
       my $builder = Alien::Builder->new( bin_requires => { 'Alien::Foo' => '0.05' } );
       
-      eval { $builder->alien_prop_env };
+      eval { $builder->env };
       is $@, '', 'no crash';
       note $@ if $@;
     };
@@ -358,7 +359,7 @@ subtest 'env' => sub {
 
       my $builder = Alien::Builder->new( bin_requires => { 'Alien::Foo' => '1.05' } );
       
-      eval { $builder->alien_prop_env };
+      eval { $builder->env };
       like $@, qr{Alien::Foo}, 'dies with message';
     };
     
@@ -375,8 +376,8 @@ subtest 'env' => sub {
       },
     );
     
-    is $builder->alien_prop_env->{FOO}, 'foo', 'FOO=foo';
-    is $builder->alien_prop_env->{BAR}, undef, 'BAR=undef';
+    is $builder->env->{FOO}, 'foo', 'FOO=foo';
+    is $builder->env->{BAR}, undef, 'BAR=undef';
   
   };
 
@@ -390,7 +391,7 @@ subtest name => sub {
   
     my $builder = Alien::Builder->new;
     
-    is $builder->alien_prop_interpolator->interpolate('%n'), '', '%n is empty string';
+    is $builder->interpolator->interpolate('%n'), '', '%n is empty string';
   
   };
   
@@ -399,7 +400,7 @@ subtest name => sub {
 
     my $builder = Alien::Builder->new( name => 'foo' );
     
-    is $builder->alien_prop_interpolator->interpolate('%n'), 'foo', '%n is foo'
+    is $builder->interpolator->interpolate('%n'), 'foo', '%n is foo'
 
   };
 
@@ -412,13 +413,13 @@ subtest '%c' => sub {
     subtest 'unix like' => sub {
       local $Alien::Builder::OS = 'linux';
       my $builder = Alien::Builder->new;  
-      is $builder->alien_prop_interpolator->interpolate('%c'), './configure --with-pic', 'is ./configure --with-pic';
+      is $builder->interpolator->interpolate('%c'), './configure --with-pic', 'is ./configure --with-pic';
     };
     
     subtest 'windows' => sub {
       local $Alien::Builder::OS = 'MSWin32';
       my $builder = Alien::Builder->new;  
-      is $builder->alien_prop_interpolator->interpolate('%c'), 'sh configure --with-pic', 'is sh configure --with-pic';
+      is $builder->interpolator->interpolate('%c'), 'sh configure --with-pic', 'is sh configure --with-pic';
     };
   
   };
@@ -433,10 +434,10 @@ subtest helper => sub {
     helper => { foo => '"abc" . "def"' },
   );
   
-  my $string = $builder->alien_prop_interpolator->interpolate('%{foo}');
+  my $string = $builder->interpolator->interpolate('%{foo}');
   is $string, 'abcdef', 'used heler';
 
-  my $pkg_config = $builder->alien_prop_interpolator->interpolate('%{pkg_config}');
+  my $pkg_config = $builder->interpolator->interpolate('%{pkg_config}');
   isnt $pkg_config, '', "pkg_config = $pkg_config"
 
 };
@@ -444,21 +445,21 @@ subtest helper => sub {
 subtest build_commands => sub {
   plan tests => 2;
   my $builder = Alien::Builder->new;
-  isa_ok $builder->alien_prop_build_commands, 'Alien::Builder::CommandList';
-  is_deeply [$builder->alien_prop_build_commands->raw], [['%c --prefix=%s'],['make']];
+  isa_ok $builder->build_commands, 'Alien::Builder::CommandList';
+  is_deeply [$builder->build_commands->raw], [['%c --prefix=%s'],['make']];
 };
 
 subtest install_commands => sub {
   plan tests => 2;
   my $builder = Alien::Builder->new;
-  isa_ok $builder->alien_prop_install_commands, 'Alien::Builder::CommandList';
-  is_deeply [$builder->alien_prop_install_commands->raw], [['make install']];
+  isa_ok $builder->install_commands, 'Alien::Builder::CommandList';
+  is_deeply [$builder->install_commands->raw], [['make install']];
 };
 
 subtest test_commands => sub {
   my $builder = Alien::Builder->new;
-  isa_ok $builder->alien_prop_test_commands, 'Alien::Builder::CommandList';
-  is_deeply [$builder->alien_prop_test_commands->raw], [];
+  isa_ok $builder->test_commands, 'Alien::Builder::CommandList';
+  is_deeply [$builder->test_commands->raw], [];
 };
 
 subtest arch => sub {
@@ -469,7 +470,7 @@ subtest arch => sub {
   subtest default => sub {
     plan tests => 1;
     my $builder = Alien::Builder->new;
-    is !!$builder->alien_prop_arch, '', 'arch is off by default';  
+    is !!$builder->arch, '', 'arch is off by default';  
   };
   
   $ENV{ALIEN_ARCH} = 1;
@@ -477,13 +478,13 @@ subtest arch => sub {
   subtest 'env override' => sub {
     plan tests => 1;
     my $builder = Alien::Builder->new;
-    is !!$builder->alien_prop_arch, 1, 'arch is on by default';  
+    is !!$builder->arch, 1, 'arch is on by default';  
   };
 
   subtest override => sub {
     plan tests => 1;
     my $builder = Alien::Builder->new( arch => 1 );
-    is !!$builder->alien_prop_arch, 1, 'arch is on';
+    is !!$builder->arch, 1, 'arch is on';
   };
 
 };
@@ -494,7 +495,7 @@ subtest ffi_name => sub {
   subtest default => sub {
     plan tests => 1;
     my $builder = Alien::Builder->new;
-    is $builder->alien_prop_ffi_name, '', 'default is ""';
+    is $builder->ffi_name, '', 'default is ""';
   };
   
   subtest 'defer to pkg_config name' => sub {
@@ -502,7 +503,7 @@ subtest ffi_name => sub {
     my $builder = Alien::Builder->new(
       name => 'foobar',
     );
-    is $builder->alien_prop_ffi_name, 'foobar', 'default to alien_prop_name';
+    is $builder->ffi_name, 'foobar', 'default to name';
   };
 
   subtest 'override pkg_config name' => sub {
@@ -511,7 +512,7 @@ subtest ffi_name => sub {
       name => 'foobar',
       ffi_name => 'baz',
     );
-    is $builder->alien_prop_ffi_name, 'baz', 'default to alien_prop_name';
+    is $builder->ffi_name, 'baz', 'default to name';
   };
 
 };
@@ -522,13 +523,13 @@ subtest inline_auto_include => sub {
   subtest default => sub {
     plan tests => 1;
     my $builder = Alien::Builder->new;
-    is_deeply $builder->alien_prop_inline_auto_include, [], 'default is empty list';
+    is_deeply $builder->inline_auto_include, [], 'default is empty list';
   };
 
   subtest default => sub {
     plan tests => 1;
     my $builder = Alien::Builder->new( inline_auto_include => ['-I/foo', '-I/bar'] );
-    is_deeply $builder->alien_prop_inline_auto_include, [qw( -I/foo -I/bar )], 'with values';
+    is_deeply $builder->inline_auto_include, [qw( -I/foo -I/bar )], 'with values';
   };
 
 };
@@ -539,19 +540,19 @@ subtest isolate_dynamic => sub {
   subtest default => sub {
     plan tests => 1;
     my $builder = Alien::Builder->new;
-    is !!$builder->alien_prop_isolate_dynamic, 1, 'on by default';
+    is !!$builder->isolate_dynamic, 1, 'on by default';
   };
 
   subtest on => sub {
     plan tests => 1;
     my $builder = Alien::Builder->new( isolate_dynamic => 1 );
-    is !!$builder->alien_prop_isolate_dynamic, 1, 'on';
+    is !!$builder->isolate_dynamic, 1, 'on';
   };
 
   subtest off => sub {
     plan tests => 1;
     my $builder = Alien::Builder->new( isolate_dynamic => 0 );
-    is !!$builder->alien_prop_isolate_dynamic, '', 'off';
+    is !!$builder->isolate_dynamic, '', 'off';
   };
 
 };
@@ -562,15 +563,15 @@ subtest 'provides cflags libs' => sub {
   subtest default => sub {
     plan tests => 2;
     my $builder = Alien::Builder->new;
-    is $builder->alien_prop_provides_cflags, undef, 'cflags undef';
-    is $builder->alien_prop_provides_libs, undef, 'libs undef';
+    is $builder->provides_cflags, undef, 'cflags undef';
+    is $builder->provides_libs, undef, 'libs undef';
   };
   
   subtest 'with values' => sub {
     plan tests => 2;
     my $builder = Alien::Builder->new( provides_cflags => '-DFOO', provides_libs => '-lfoo' );
-    is $builder->alien_prop_provides_cflags, '-DFOO', 'cflags undef';
-    is $builder->alien_prop_provides_libs, '-lfoo', 'libs undef';
+    is $builder->provides_cflags, '-DFOO', 'cflags undef';
+    is $builder->provides_libs, '-lfoo', 'libs undef';
   };
 
 };
@@ -581,13 +582,13 @@ subtest version_check => sub {
   subtest default => sub {
     plan tests => 1;
     my $builder = Alien::Builder->new;
-    is $builder->alien_prop_version_check, '%{pkg_config} --modversion %n', 'has default value';
+    is $builder->version_check, '%{pkg_config} --modversion %n', 'has default value';
   };
 
   subtest 'with value' => sub {
     plan tests => 1;
     my $builder = Alien::Builder->new( version_check => 'foo --bar' );
-    is $builder->alien_prop_version_check, 'foo --bar', 'override';
+    is $builder->version_check, 'foo --bar', 'override';
   };
 
 };
@@ -623,14 +624,103 @@ subtest retriever => sub {
 
   subtest default => sub {
     my $builder = Alien::Builder->new;
-    isa_ok $builder->alien_prop_retriever, 'Alien::Builder::Retriever';
+    isa_ok $builder->retriever, 'Alien::Builder::Retriever';
   };
   
   subtest 'alt class' => sub {
     my $builder = Alien::Builder->new( retriever_class => 'My::Retriever' );
-    isa_ok $builder->alien_prop_retriever, 'My::Retriever';
+    isa_ok $builder->retriever, 'My::Retriever';
   };
 
+};
+
+subtest 'save/restore' => sub {
+
+  my $state_file = File::Spec->catfile( tempdir( CLEANUP => 1 ), 'alien_builder.json' );
+
+  subtest save => sub {
+    my $builder = Alien::Builder->new;
+    $builder->save($state_file);
+    ok -f $state_file, "created: $state_file";
+  };
+
+  subtest restore=> sub {
+    my $builder = Alien::Builder->restore($state_file);
+    isa_ok $builder, 'Alien::Builder';
+  };
+
+};
+
+subtest actions => sub {
+
+  my $state_file = File::Spec->catfile( tempdir( CLEANUP => 1 ), 'alien_builder.json' );
+  my $build_dir  = File::Spec->catdir( tempdir( CLEANUP => 1 ), '_alien' );
+
+  my $dump_state = q{
+    use YAML::XS qw( Dump );
+    use JSON::PP qw( decode_json );
+    open my $fh, '<', $state_file;
+    note Dump(decode_json(do { local $/; <$fh> }));
+    close $fh;
+  };
+  
+  subtest 'configure' => sub {
+  
+    my $builder = Alien::Builder->new(
+      build_dir => $build_dir,
+      retriever => [URI::file->new_abs('./corpus/file/repo2/')->as_string ],
+      build_commands => [ [ '%X', 'build.pl' ] ],
+      test_commands => [ [ '%X', 'test.pl' ] ],
+      install_commands => [ [ '%X', 'install.pl' ] ],
+    );
+    
+    $builder->save($state_file);
+
+    ok -f $state_file, "created: $state_file";
+  };
+
+  subtest 'download' => sub {
+  
+    my $builder = Alien::Builder->restore($state_file);
+    $builder->action_download;
+    
+    my $filename = File::Spec->catfile($build_dir, 'roger-1.00.tar.gz');
+    ok -f $filename, "copied tarball: $filename";
+
+    $builder->save($state_file);
+  };
+
+  subtest 'extract' => sub {
+
+    my $builder = Alien::Builder->restore($state_file);
+    $builder->action_extract;
+    
+    my $dir = File::Spec->catfile($build_dir, 'roger-1.00');
+    ok -d $dir, "extracted tarball $dir";
+
+    $builder->save($state_file);
+  };
+  
+  foreach my $stage (qw( build test install ))
+  {
+  
+    subtest $stage => sub {
+      my $method = "action_$stage";
+    
+      my $builder = Alien::Builder->restore($state_file);
+      my($out, $err) = capture_merged { eval { $builder->$method }; $@ };
+      note $out;
+    
+      $builder->save($state_file);
+      is $err, '', 'did not throw exception';
+      
+      my $filename = File::Spec->catfile($build_dir, 'roger-1.00', "$stage.txt");
+      ok -f $filename, "created $filename";
+    };
+  
+  }
+
+  eval $dump_state;
 };
 
 package

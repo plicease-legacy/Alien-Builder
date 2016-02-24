@@ -19,6 +19,7 @@ $modules{$_} = $_ for qw(
   File::chdir
   HTML::Parser
   HTTP::Tiny
+  JSON::PP
   Net::FTP
   Shell::Config::Generate
   Shell::Guess

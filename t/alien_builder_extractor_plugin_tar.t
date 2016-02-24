@@ -15,7 +15,7 @@ subtest normal => sub {
   
   my $dir = tempdir( CLEANUP => 1 );
   my $root = Alien::Builder::Extractor::Plugin::ArchiveTar->extract(
-    $download => $dir,
+    $download->copy_to($dir) => $dir,
   );
   
   ok -d $root, "root = $root";
@@ -36,7 +36,7 @@ subtest 'with bogus symlink' => sub {
   my $dir = tempdir( CLEANUP => 1 );
   my $root = eval { 
     Alien::Builder::Extractor::Plugin::ArchiveTar->extract(
-      $download => $dir,
+      $download->copy_to($dir) => $dir,
     );
   };
   diag $@ if $@;
@@ -58,7 +58,7 @@ subtest 'with files in root' => sub {
   
   my $dir = tempdir( CLEANUP => 1 );
   my $root = Alien::Builder::Extractor::Plugin::ArchiveTar->extract(
-    $download => $dir,
+    $download->copy_to($dir) => $dir,
   );
   
   ok -d $root, "root = $root";

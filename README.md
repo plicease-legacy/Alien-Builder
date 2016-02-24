@@ -16,12 +16,12 @@ Create a new instance of [Alien::Builder](https://metacpan.org/pod/Alien::Builde
 
 # PROPERTIES
 
-Properties can be specified by passing them into ["new"](#new) as arguments.  
-They can be accessed after the [Alien::Builder](https://metacpan.org/pod/Alien::Builder) object is created using 
-the `alien_prop_` prefix.  For example:
+Properties are read-only and can only be specified when passing them into
+["new"](#new) as arguments.  They can be accessed after the [Alien::Builder](https://metacpan.org/pod/Alien::Builder)
+object is created using accessor methods of the same name.
 
     my $builder = Alien::Builder->new( arch => 1 );
-    $builder->alien_prop_arch; # is 1
+    $builder->arch; # is 1
 
 ## arch
 
@@ -226,6 +226,16 @@ system.  The default is `pkg-config --modversion %n`.
 
 # METHODS
 
+## action\_download
+
+## action\_extract
+
+## action\_build
+
+## action\_test
+
+## action\_install
+
 ## alien\_check\_installed\_version
 
     my $version = $builder->alien_check_installed_version;
@@ -271,6 +281,10 @@ using the [command interpolation engine](#command-interpolation).
 
 Returns a set of key value pairs including `stdout`, `stderr`, 
 `success` and `command`.
+
+## save
+
+## restore
 
 # ENVIRONMENT
 

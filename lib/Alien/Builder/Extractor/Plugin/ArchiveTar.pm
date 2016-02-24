@@ -22,10 +22,8 @@ use File::chdir;
 
 sub extract
 {
-  my(undef, $download, $dir) = @_;
+  my(undef, $tarball, $dir) = @_;
   
-  my $tarball = $download->copy_to($dir);
-
   local $Archive::Tar::RESOLVE_SYMLINK = $Archive::Tar::RESOLVE_SYMLINK;
   $Archive::Tar::RESOLVE_SYMLINK = 'none' if $^O eq 'MSWin32';
   

@@ -11,6 +11,7 @@ use File::chdir;
 use Text::ParseWords qw( shellwords );
 use Capture::Tiny qw( tee capture );
 use Scalar::Util qw( weaken );
+use JSON::PP qw( encode_json decode_json );
 use 5.008001;
 
 # ABSTRACT: Base classes for Alien builder modules
@@ -46,7 +47,7 @@ sub new
   # which we will eventually want to support.
   foreach my $prop (grep s/^build_prop_//, keys %Alien::Builder::)
   {
-    next if __PACKAGE__->can("alien_prop_$prop");
+    next if __PACKAGE__->can($prop);
     my $accessor_method = sub {
       my($self) = @_;
       $self->{prop_cache}->{$prop} ||= do {
@@ -55,7 +56,7 @@ sub new
       };
     };
     no strict 'refs';
-    *{"alien_prop_$prop"} = $accessor_method;
+    *{$prop} = $accessor_method;
   }
 
   bless {
@@ -64,33 +65,37 @@ sub new
       map { s/^build_prop_// ? ($_) : () } 
       sort keys %Alien::Builder::
     },
+    config => {},
   }, $class;
 }
 
 # public properties
-# - properties are specified by the caller by passing in a key/value pairs
-#   to the constructor.  The values should be strings, lists or hash references
-#   no sub references and no objects
-# - these are stored by the constuctor in the "init" hash.
-# - the "init" hash is read only, nothing should EVER write to it.
-# - You should be able to save the "init" has to a .json file and reconstitute
-#   the builder object from that.
-# - the actual value of the property is defined by a method which takes the raw
-#   "init" hash values, applies any default values if they properties haven't
-#   been provided, and turns the value into the thing which is actually used.
-# - "thing" in this case can be either a primitive (string, hash, etc) or an
-#   object.
-# - only this method should read from the init hash, everything else should
-#   go through the property method
+# - properties are specifie dby the caller by passing in key/value pairs
+#   to the construtor.  The values should be strings, lists of hash references
+#   no sub references and no objects!
+# - These are stored by the constructor into the "init" hash.
+# - The "init" hash is read only, actual properties might manifest at run time
+#   as objects and/or default values.  These derivitive forms will be stored
+#   in "prop_cache" hash.
+# - You should NEVER write to the init hash.
+# - Conversion from a "init" property to a "prop_cache" property should be
+#   deterministic, so that a given builder object can be completely and
+#   deterministically recreated from just the arguments passed into new.
+# - This way the "init" hash can be saved to JSON, and we can recreate the
+#   builder object on a subsequent call.
+# - properties are definied by creating a method with a "build_prop_" prefix.
+# - the associated accessor method will automatically be generated.
+# - ONLY the builder method for a particular property should be reading the
+#   raw "init" hash value.  Anything else should call the accessor method.
 
 =head1 PROPERTIES
 
-Properties can be specified by passing them into L</new> as arguments.  
-They can be accessed after the L<Alien::Builder> object is created using 
-the C<alien_prop_> prefix.  For example:
+Properties are read-only and can only be specified when passing them into
+L</new> as arguments.  They can be accessed after the L<Alien::Builder>
+object is created using accessor methods of the same name.
 
  my $builder = Alien::Builder->new( arch => 1 );
- $builder->alien_prop_arch; # is 1
+ $builder->arch; # is 1
 
 =head2 arch
 
@@ -146,7 +151,7 @@ sub build_prop_bin_requires
   
   my %bin_requires = %{ $self->{init}->{bin_requires} || {} };
   
-  $bin_requires{'Alien::MSYS'} ||= 0 if $self->alien_prop_msys && $OS eq 'MSWin32';
+  $bin_requires{'Alien::MSYS'} ||= 0 if $self->msys && $OS eq 'MSWin32';
   
   \%bin_requires;
 }
@@ -171,8 +176,8 @@ sub build_prop_build_commands
   my @commands = @{ $self->{init}->{build_commands} || [ '%c --prefix=%s', 'make' ] };
   Alien::Builder::CommandList->new(
     \@commands, 
-    interpolator => $self->alien_prop_interpolator,
-    system       => sub { $self->alien_do_system(@_, { interpolate => 0 }) },
+    interpolator => $self->interpolator,
+    system       => sub { $self->_alien_do_system_for_command_list(@_) },
   );
 }
 
@@ -251,8 +256,8 @@ sub build_prop_env
   local $ENV{PATH} = $ENV{PATH};
   my $config = $self->{env_log} = Alien::Builder::EnvLog->new;
   
-  foreach my $mod (keys %{ $self->alien_prop_bin_requires }) {
-    my $version = $self->alien_prop_bin_requires->{$mod};
+  foreach my $mod (keys %{ $self->bin_requires }) {
+    my $version = $self->bin_requires->{$mod};
     eval qq{ use $mod $version }; # should also work for version = 0
     die $@ if $@;
 
@@ -283,7 +288,7 @@ sub build_prop_env
   if($self->_autoconf && !defined $ENV{CONFIG_SITE})
   {
     
-    local $CWD = $self->alien_prop_build_dir;
+    local $CWD = $self->build_dir;
       
     my $ldflags = $Config{ldflags};
     $ldflags .= " -Wl,-headerpad_max_install_names"
@@ -306,7 +311,7 @@ sub build_prop_env
     
   foreach my $key (sort keys %{ $self->{init}->{env} || {} })
   {
-    my $value = $self->alien_prop_interpolator->interpolate( $self->{init}->{env}->{$key} );
+    my $value = $self->interpolator->interpolate( $self->{init}->{env}->{$key} );
     $env{$key} = $value;
     if(defined $value)
     {
@@ -318,7 +323,7 @@ sub build_prop_env
     }
   }
     
-  $config->write_log($self->alien_prop_build_dir);
+  $config->write_log($self->build_dir);
     
   \%env;
 }
@@ -357,7 +362,7 @@ sub build_prop_ffi_name
 {
   my($self) = @_;
   my $name = $self->{init}->{ffi_name};
-  $name = $self->alien_prop_name unless defined $name;
+  $name = $self->name unless defined $name;
   $name;
 }
 
@@ -434,8 +439,8 @@ sub build_prop_install_commands
   my @commands = @{ $self->{init}->{install_commands} || [ 'make install' ] };
   Alien::Builder::CommandList->new(
     \@commands,
-    interpolator => $self->alien_prop_interpolator,
-    system       => sub { $self->alien_do_system(@_, { interpolate => 0 }) },
+    interpolator => $self->interpolator,
+    system       => sub { $self->_alien_do_system_for_command_list(@_) },
   );
 }
 
@@ -458,11 +463,11 @@ sub build_prop_interpolator
     vars => {
       # for compat with AB::MB we do on truthiness,
       # not definedness
-      n => $self->alien_prop_name,
+      n => $self->name,
       s => 'TODO',
       c => $self->_autoconf_configure,
     },
-    helpers => $self->alien_prop_helper,
+    helpers => $self->helper,
   );
 }
 
@@ -541,7 +546,7 @@ sub build_prop_provides_libs
 sub build_prop_retriever
 {
   my($self) = @_;
-  $self->alien_prop_retriever_class->new(@{ $self->{init}->{retriever} || [] });
+  $self->retriever_class->new(@{ $self->{init}->{retriever} || [] });
 }
 
 =head2 retriever_class
@@ -573,8 +578,8 @@ sub build_prop_test_commands
   my @commands = @{ $self->{init}->{test_commands} || [] };
   Alien::Builder::CommandList->new(
     \@commands,
-    interpolator => $self->alien_prop_interpolator,
-    system       => sub { $self->alien_do_system(@_, { interpolate => 0 }) },
+    interpolator => $self->interpolator,
+    system       => sub { $self->_alien_do_system_for_command_list(@_) },
   );
 }
 
@@ -593,6 +598,67 @@ sub build_prop_version_check
 
 =head1 METHODS
 
+=head2 action_download
+
+=cut
+
+sub action_download
+{
+  my($self) = @_;
+  $self->{config}->{working_download} = $self->retriever->retrieve->copy_to($self->build_dir);
+  $self;
+}
+
+=head2 action_extract
+
+=cut
+
+sub action_extract
+{
+  my($self) = @_;
+  $self->{config}->{working_dir} = $self->extractor->extract($self->{config}->{working_download}, $self->build_dir);
+  $self;
+}
+
+=head2 action_build
+
+=cut
+
+sub action_build
+{
+  my($self) = @_;
+  local $CWD = $self->{config}->{working_dir};
+  print "+ cd $CWD\n";
+  $self->build_commands->execute;
+  $self;
+}
+
+=head2 action_test
+
+=cut
+
+sub action_test
+{
+  my($self) = @_;
+  local $CWD = $self->{config}->{working_dir};
+  print "+ cd $CWD\n";
+  $self->test_commands->execute;
+  $self;
+}
+
+=head2 action_install
+
+=cut
+
+sub action_install
+{
+  my($self) = @_;
+  local $CWD = $self->{config}->{working_dir};
+  print "+ cd $CWD\n";
+  $self->install_commands->execute;
+  $self;
+}
+
 =head2 alien_check_installed_version
 
  my $version = $builder->alien_check_installed_version;
@@ -610,7 +676,7 @@ package you are building does not use C<pkg-config>.
 sub alien_check_installed_version
 {
   my($self) = @_;
-  my $command = $self->alien_prop_version_check;
+  my $command = $self->version_check;
   my %result = $self->alien_do_system($command, { verbose => 0 });
   my $version = ($result{success} && $result{stdout}) || 0;
   return $version;
@@ -663,12 +729,12 @@ C<success> and C<command>.
 sub alien_do_system
 {
   my($self, @args) = @_;
-  my $opts = ref $args[-1] ? pop : { verbose => 1, interpolate => 1 };
+  my $opts = ref $args[-1] ? pop @args : { verbose => 1, interpolate => 1 };
   
   local %ENV = %ENV;
-  foreach my $key (sort keys %{ $self->alien_prop_env })
+  foreach my $key (sort keys %{ $self->env })
   {
-    my $value = $self->alien_prop_env->{$key};
+    my $value = $self->env->{$key};
     if(defined $value)
     {
       $ENV{$key} = $value;
@@ -685,9 +751,8 @@ sub alien_do_system
   local $CWD;
   my $initial_cwd = $CWD;
 
-  @args = map { $self->alien_prop_interpolator->interpolate($_) } @args
+  @args = map { $self->interpolator->interpolate($_) } @args
     unless $opts->{interplate};
-  print "+ @args\n";
   
   my($out, $err, $success) =
     $verbose
@@ -708,7 +773,48 @@ sub alien_do_system
   return wantarray ? %return : $return{success};
 }
 
+=head2 save
+
+=cut
+
+sub save
+{
+  my($self, $filename) = @_;
+  $filename ||= 'alien_builder.json';
+  my $fh;
+  open($fh, '>', $filename) || die "unable to write $filename $!";
+  print $fh encode_json({ init => $self->{init}, config => $self->{config}, class => ref($self) });
+  close $fh;
+  $self;
+}
+
+=head2 restore
+
+=cut
+
+sub restore
+{
+  my($class, $filename) = @_;
+  $filename ||= 'alien_builder.json';
+  my $fh;
+  open($fh, '<', $filename) || die "unable to read $filename $!";
+  my $payload = decode_json(do { local $/; <$fh> });
+  close $fh;
+  __PACKAGE__->_class($payload->{class});
+  my $self = $payload->{class}->new(%{ $payload->{init} });
+  $self->{config} = $payload->{config};
+  $self;
+}
+
 # Private properties and methods
+
+sub _alien_do_system_for_command_list
+{
+  my($self, @args) = @_;
+  print "+ @args\n";
+  my %r = $self->alien_do_system(@args, { interpolate => 0 });
+  die "command failed: $r{command}" unless $r{success};
+}
 
 sub _autoconf
 {
@@ -718,7 +824,7 @@ sub _autoconf
       map { ref $_ ? @$_ : $_ }
       map { $_->raw }
       map { $self->$_ }
-      qw( alien_prop_build_commands alien_prop_install_commands alien_prop_test_commands );
+      qw( build_commands install_commands test_commands );
   };
 }
 
@@ -726,14 +832,14 @@ sub _autoconf_configure
 {
   my($self) = @_;
   my $configure = $OS eq 'MSWin32' ? 'sh configure' : './configure';
-  $configure .= ' --with-pic' if $self->alien_prop_autoconf_with_pic;
+  $configure .= ' --with-pic' if $self->autoconf_with_pic;
   $configure;
 }
 
 sub _env_log
 {
   my($self) = @_;
-  $self->alien_prop_env;
+  $self->env;
   $self->{env_log};
 }
 

@@ -278,6 +278,20 @@ sub build_prop_build_dir
   $CWD;
 }
 
+=head2 dest_dir
+
+If set to true (the default is false), do a "double staged destdir" install.
+
+TODO: needs FAQ
+
+=cut
+
+sub build_prop_dest_dir
+{
+  my($self) = @_;
+  $self->{init}->{dest_dir} ? _catdir($self->build_dir, 'destdir') : undef;
+}
+
 =head2 env
 
 Environment overrides.  Allows you to set environment variables as a 
@@ -387,6 +401,12 @@ sub build_prop_env
     my $config_site = _catfile($CWD, 'config.site');
     $config->set( CONFIG_SITE => $config_site );
     $env{CONFIG_SITE} = $config_site;
+  }
+  
+  if(my $value = $self->dest_dir)
+  {
+    $env{DESTDIR} = $value;
+    $config->set( DESTDIR => $value );
   }
     
   foreach my $key (sort keys %{ $self->{init}->{env} || {} })
@@ -544,7 +564,7 @@ sub build_prop_interpolator
       # for compat with AB::MB we do on truthiness,
       # not definedness
       n => $self->name,
-      s => 'TODO',
+      s => $self->prefix,
       c => $self->_autoconf_configure,
     },
     helpers => $self->helper,
@@ -593,6 +613,19 @@ sub build_prop_name
 {
   my($self) = @_;
   $self->{init}->{name} || '';
+}
+
+=head2 prefix
+
+The install prefix to use.  If you are using one of the MakeMaker or
+ModuleBuild interfaces, then this will likely be specified for you.
+
+=cut
+
+sub build_prop_prefix
+{
+  my($self) = @_;
+  $self->{init}->{prefix} || '/usr/local';
 }
 
 =head2 provides_cflags

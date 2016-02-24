@@ -139,6 +139,12 @@ multiple argument form of system is used.
 The name of the folder which will house the library where it is 
 downloaded and built.  The default name is `_alien`.
 
+## dest\_dir
+
+If set to true (the default is false), do a "double staged destdir" install.
+
+TODO: needs FAQ
+
 ## env
 
 Environment overrides.  Allows you to set environment variables as a 
@@ -268,6 +274,11 @@ requirement when building on Windows.
 
 The name of the primary library which will be provided.  This should be 
 in the form to be passed to `pkg-config`.
+
+## prefix
+
+The install prefix to use.  If you are using one of the MakeMaker or
+ModuleBuild interfaces, then this will likely be specified for you.
 
 ## provides\_cflags
 

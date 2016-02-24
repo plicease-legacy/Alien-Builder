@@ -134,6 +134,14 @@ sub new
 
 =head1 PROPERTIES
 
+At the minimum you will want to define a L</retriever> specification.
+Unless your tool or library uses GNU autotools style interface (that is
+it is installed with something like "./configure && make && make install")
+you will need to also provide build and install commands with the
+L</build_commands> and L</install_commands> properties.  Depending on
+the complexity of your tool or library you may need to specify additional
+properties.
+
 Properties are read-only and can only be specified when passing them into
 L</new> as arguments.  They can be accessed after the L<Alien::Builder>
 object is created using accessor methods of the same name.

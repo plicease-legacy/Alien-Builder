@@ -54,6 +54,14 @@ Create a new instance of [Alien::Builder](https://metacpan.org/pod/Alien::Builde
 
 # PROPERTIES
 
+At the minimum you will want to define a ["retriever"](#retriever) specification.
+Unless your tool or library uses GNU autotools style interface (that is
+it is installed with something like "./configure && make && make install")
+you will need to also provide build and install commands with the
+["build\_commands"](#build_commands) and ["install\_commands"](#install_commands) properties.  Depending on
+the complexity of your tool or library you may need to specify additional
+properties.
+
 Properties are read-only and can only be specified when passing them into
 ["new"](#new) as arguments.  They can be accessed after the [Alien::Builder](https://metacpan.org/pod/Alien::Builder)
 object is created using accessor methods of the same name.

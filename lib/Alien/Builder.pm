@@ -861,6 +861,9 @@ sub action_postinstall
   my($self) = @_;
   return unless $self->install_type eq 'share';
   
+  # QUESTION:
+  # - maybe this should be in Alien::Builder::MM instead.
+  
   # TODO:
   # - touch blib/arch/auto/Alien/Foo.txt if archi = 1
   # - create blib sharedir/alien_builder.json

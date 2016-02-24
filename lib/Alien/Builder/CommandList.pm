@@ -72,4 +72,14 @@ sub raw
   map { ref $_ ? $_ : [$_] } @{ $self->{command_list} }
 }
 
+=head2 is_empty
+
+=cut
+
+sub is_empty
+{
+  my($self) = @_;
+  @{ $self->{command_list} } == 0;
+}
+
 1;

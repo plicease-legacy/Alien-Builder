@@ -59,7 +59,7 @@ sub new
     *{$prop} = $accessor_method;
   }
 
-  bless {
+  my $self = bless {
     init => {
       map { $_ => $args{$_} } 
       map { s/^build_prop_// ? ($_) : () } 
@@ -67,6 +67,10 @@ sub new
     },
     config => {},
   }, $class;
+
+  $self->{config}->{inline_auto_include} = $self->inline_auto_include;
+
+  $self;
 }
 
 # public properties
@@ -657,6 +661,28 @@ sub action_install
   print "+ cd $CWD\n";
   $self->install_commands->execute;
   $self;
+}
+
+=head2 action_fake
+
+=cut
+
+sub action_fake
+{
+  my($self) = @_;
+  my $cwd = $self->{config}->{working_dir};
+  foreach my $stage (qw( build test install ))
+  {
+    my $method = "${stage}_commands";
+    my $cl = $self->$method;
+    next if $cl->is_empty;
+    print "# make alien_$stage\n";
+    print "+ cd $cwd\n";
+    foreach my $cmd ($cl->interpolate)
+    {
+      print "+ @{$cmd}\n";
+    }
+  }
 }
 
 =head2 alien_check_installed_version

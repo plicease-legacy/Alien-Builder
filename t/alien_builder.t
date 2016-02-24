@@ -521,15 +521,15 @@ subtest inline_auto_include => sub {
   plan tests => 2;
   
   subtest default => sub {
-    plan tests => 1;
     my $builder = Alien::Builder->new;
     is_deeply $builder->inline_auto_include, [], 'default is empty list';
+    is_deeply $builder->{config}->{inline_auto_include}, [], 'config matches';
   };
 
   subtest default => sub {
-    plan tests => 1;
     my $builder = Alien::Builder->new( inline_auto_include => ['-I/foo', '-I/bar'] );
     is_deeply $builder->inline_auto_include, [qw( -I/foo -I/bar )], 'with values';
+    is_deeply $builder->{config}->{inline_auto_include}, [qw( -I/foo -I/bar )], 'config matches';
   };
 
 };
@@ -719,6 +719,15 @@ subtest actions => sub {
     };
   
   }
+
+  subtest 'fake' => sub {
+  
+    my $builder = Alien::Builder->restore($state_file);
+    my($out, $err) = capture_merged { eval { $builder->action_fake }; $@ };
+    note $out;
+    
+    is $err, '', 'did not throw exception';
+  };
 
   eval $dump_state;
 };

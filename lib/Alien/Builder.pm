@@ -73,7 +73,8 @@ Deploy with L<Module::Build>, see L<Alien::Base::ModuleBuild>.
 
 =head1 DESCRIPTION
 
-B<WARNING>: this interface is B<EXPERIMENTAL>.
+B<WARNING>: this interface is B<EXPERIMENTAL>.  If you need something stable right
+now, use L<Alien::Base::ModuleBuild>.
 
 The purpose of this class is to provide a generic builder/installer that can be used
 by L<ExtUtils::MakeMaker> and L<Module::Build> derivatives for creating L<Alien>

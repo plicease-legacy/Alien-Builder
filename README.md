@@ -58,7 +58,8 @@ Deploy with [Module::Build](https://metacpan.org/pod/Module::Build), see [Alien:
 
 # DESCRIPTION
 
-**WARNING**: this interface is **EXPERIMENTAL**.
+**WARNING**: this interface is **EXPERIMENTAL**.  If you need something stable right
+now, use [Alien::Base::ModuleBuild](https://metacpan.org/pod/Alien::Base::ModuleBuild).
 
 The purpose of this class is to provide a generic builder/installer that can be used
 by [ExtUtils::MakeMaker](https://metacpan.org/pod/ExtUtils::MakeMaker) and [Module::Build](https://metacpan.org/pod/Module::Build) derivatives for creating [Alien](https://metacpan.org/pod/Alien)

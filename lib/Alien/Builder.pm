@@ -871,27 +871,22 @@ sub action_install
   $self;
 }
 
-=head2 action_postinstall
-
-=cut
-
-sub action_postinstall
-{
-  my($self) = @_;
-  return unless $self->install_type eq 'share';
-  
-  # QUESTION:
-  # - maybe this should be in Alien::Builder::MM instead.
-  
-  # TODO:
-  # - touch blib/arch/auto/Alien/Foo.txt if archi = 1
-  # - create blib sharedir/alien_builder.json
-  # - populate $builder->{config}->{pkgconfig} (see AB::MB->alien_load_pkgconfig)
-  # - alien_relocation_fixup (for OS X)
-  # - isolate dynamic
-  
-  # - create Alien::Foo::Install::Files.pm (here or elsewhere?)
-}
+#sub action_postinstall
+#{
+#  my($self) = @_;
+#  return unless $self->install_type eq 'share';
+#  
+#  # QUESTION:
+#  # - maybe this should be in Alien::Builder::MM instead.
+#  
+#  # TODO:
+#  # - touch blib/arch/auto/Alien/Foo.txt if archi = 1
+#  # - populate $builder->{config}->{pkgconfig} (see AB::MB->alien_load_pkgconfig)
+#  # - alien_relocation_fixup (for OS X)
+#  # - isolate dynamic
+#  
+#  # - create Alien::Foo::Install::Files.pm (here or elsewhere?)
+#}
 
 =head2 action_fake
 

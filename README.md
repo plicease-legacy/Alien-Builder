@@ -370,8 +370,6 @@ Action that tests the library.  Executes commands as specified by ["test\_comman
 
 Action that installs the library.  Executes commands as specified by ["install\_commands"](#install_commands).
 
-## action\_postinstall
-
 ## action\_fake
 
     $builder->action_fake;

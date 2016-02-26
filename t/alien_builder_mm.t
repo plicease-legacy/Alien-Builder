@@ -8,7 +8,7 @@ $Alien::Builder::BUILD_DIR = tempdir( CLEANUP => 1 );
 
 subtest basic => sub {
 
-  my $builder = Alien::Builder::MM->new;
+  my $builder = Alien::Builder::MM->new( dist_name => 'Alien-foo' );
   
   isa_ok $builder, 'Alien::Builder';
   isa_ok $builder, 'Alien::Builder::MM';

@@ -35,13 +35,6 @@ sub new
   my %vars = %{ $args{vars} || {} };
   my %helpers = %{ $args{helpers} || {} };
   $vars{'%'} = '%';  
-
-  unless(defined $vars{n})
-  {
-    $DB::single = 1;
-    print "here\n";
-  }  
-  
   bless {
     vars => \%vars,
     helpers => \%helpers,

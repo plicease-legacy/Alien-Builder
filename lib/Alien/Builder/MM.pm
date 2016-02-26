@@ -2,19 +2,36 @@ package Alien::Builder::MM;
 
 use strict;
 use warnings;
+use Carp qw( croak );
 use Storable qw( dclone );
+use File::Spec;
 use base qw( Alien::Builder );
 
 # ABSTRACT: Alien::Builder subclass for ExtUtils::MakeMaker
 # VERSION
+
+=head1 CONSTRUCTOR
+
+=head2 new
+
+=cut
+
+sub new
+{
+  my($self, %args) = @_;
+  unless($args{prefix})
+  {
+    croak "I need to know the dist name of your distribution" unless $args{dist_name};
+    $args{prefix} = File::Spec->rel2abs( File::Spec->catdir( qw( blib lib auto share dist ), delete $args{dist_name} ) );
+  }
+  $self->SUPER::new(%args);
+}
 
 =head1 METHODS
 
 =head2 mm_args
 
 =cut
-
-# TODO: looks like we will also need mm_fallback method
 
 sub mm_args
 {
@@ -36,7 +53,61 @@ sub mm_args
 sub mm_postamble
 {
   my($self) = @_;
-  '';
+  
+  # I DO so love to muck around with Makefiles.
+  # so thankful to be able to do that.
+  # THANKS OBAMA!
+  
+  my $postamble = '';
+  my $last_target;
+  
+  my $build_dir = File::Spec->abs2rel($self->build_dir);
+  my $state_dir = File::Spec->catfile( $build_dir, '_mm' );
+  
+  foreach my $action (qw( download extract build test install ))
+  {
+    my $flag = File::Spec->catfile( $state_dir => $action);
+    my $dep  = $last_target ? "alien_$last_target" : $state_dir;
+    $postamble .= "\nalien_$action: $dep $flag\n";
+  
+    $postamble .= "$flag:\n" .
+    "\t\$(FULLPERL) -Iinc -MAlien::Builder::MM=cmds -e $action\n" .
+    "\t\$(TOUCH) $flag\n";
+    
+    $last_target = $action;
+  }
+  
+  $postamble .= "\n\nrealclean purge :: alien_clean\n";
+  $postamble .= "alien_clean:\n\t\$(RM_RF) $build_dir\n\t\$(RM_F) alien_builder.json\n";
+  $postamble .= "pure_all :: alien_install\n";
+  $postamble .= "$state_dir :\n\t\$(MKPATH) $state_dir\n";
+  
+  $postamble;
+}
+
+sub import
+{
+  my(undef, @args) = @_;
+  foreach my $arg (@args)
+  {
+    if($arg eq 'cmds')
+    {
+      package main;
+      
+        foreach my $action (qw( download extract build test install ))
+        {
+          my $method = "action_$action";
+          my $sub = sub {
+            my $ab = Alien::Builder->restore;
+            $ab->$method;
+            $ab->save;
+          };
+          no strict 'refs';
+          *{$action} = $sub;
+        };
+    }
+      
+  }
 }
 
 1;

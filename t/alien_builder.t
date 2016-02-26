@@ -594,6 +594,7 @@ subtest actions => sub {
       build_commands => [ [ '%X', 'build.pl' ] ],
       test_commands => [ [ '%X', 'test.pl' ] ],
       install_commands => [ [ '%X', 'install.pl' ] ],
+      prefix => tempdir( CLEANUP => 1 ),
     );
     
     $builder->save($state_file);

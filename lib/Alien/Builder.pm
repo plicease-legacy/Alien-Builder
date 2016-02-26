@@ -3,15 +3,16 @@ package Alien::Builder;
 use strict;
 use warnings;
 use Config;
-use Alien::Base::PkgConfig;
+use Alien::Builder::PkgConfig;
 use Alien::Builder::EnvLog;
 use Alien::Builder::CommandList;
+use File::Find ();
 use Env qw( @PATH );
 use File::chdir;
 use Text::ParseWords qw( shellwords );
 use Capture::Tiny qw( tee capture );
 use Scalar::Util qw( weaken );
-use JSON::PP qw( encode_json decode_json );
+use JSON::PP;
 use 5.008001;
 
 # ABSTRACT: Base classes for Alien builder modules
@@ -528,7 +529,7 @@ sub build_prop_helper
 {
   my($self) = @_;
   my %helper = %{ $self->{init}->{helper} || {} };
-  $helper{pkg_config} = 'Alien::Base::PkgConfig->pkg_config_command'
+  $helper{pkg_config} = 'Alien::Builder::PkgConfig->pkg_config_command'
     unless defined $helper{pkg_config};
   \%helper;
 }
@@ -778,8 +779,10 @@ Action that downloads the archive.
 sub action_download
 {
   my($self) = @_;
-  return unless $self->install_type eq 'share';
-  $self->{config}->{working_download} = $self->retriever->retrieve->copy_to($self->build_dir);
+  if($self->install_type eq 'share')
+  {
+    $self->{config}->{working_download} = $self->retriever->retrieve->copy_to($self->build_dir);
+  }
   $self;
 }
 
@@ -794,8 +797,10 @@ Action that extracts the archive.
 sub action_extract
 {
   my($self) = @_;
-  return unless $self->install_type eq 'share';
-  $self->{config}->{working_dir} = $self->extractor->extract($self->{config}->{working_download}, $self->build_dir);
+  if($self->install_type eq 'share')
+  {
+    $self->{config}->{working_dir} = $self->extractor->extract($self->{config}->{working_download}, $self->build_dir);
+  }
   $self;
 }
 
@@ -810,10 +815,12 @@ Action that builds the library.  Executes commands as specified by L</build_comm
 sub action_build
 {
   my($self) = @_;
-  return unless $self->install_type eq 'share';
-  local $CWD = $self->{config}->{working_dir};
-  print "+ cd $CWD\n";
-  $self->build_commands->execute;
+  if($self->install_type eq 'share')
+  {
+    local $CWD = $self->{config}->{working_dir};
+    print "+ cd $CWD\n";
+    $self->build_commands->execute;
+  }
   $self;
 }
 
@@ -828,10 +835,12 @@ Action that tests the library.  Executes commands as specified by L</test_comman
 sub action_test
 {
   my($self) = @_;
-  return unless $self->install_type eq 'share';
-  local $CWD = $self->{config}->{working_dir};
-  print "+ cd $CWD\n";
-  $self->test_commands->execute;
+  if($self->install_type eq 'share')
+  {
+    local $CWD = $self->{config}->{working_dir};
+    print "+ cd $CWD\n";
+    $self->test_commands->execute;
+  }
   $self;
 }
 
@@ -846,10 +855,19 @@ Action that installs the library.  Executes commands as specified by L</install_
 sub action_install
 {
   my($self) = @_;
-  return unless $self->install_type eq 'share';
-  local $CWD = $self->{config}->{working_dir};
-  print "+ cd $CWD\n";
-  $self->install_commands->execute;
+  if($self->install_type eq 'share')
+  {
+    local $CWD = $self->{config}->{working_dir};
+    print "+ cd $CWD\n";
+    $self->install_commands->execute;
+    $self->_load_pkgconfig;
+  }
+  unless(-d $self->prefix)
+  {
+    require File::Path;
+    File::Path::mkpath($self->prefix, 0, 0755);
+  }
+  $self->save(File::Spec->catfile($self->prefix, 'alien_builder.json'));
   $self;
 }
 
@@ -1047,7 +1065,7 @@ sub save
   $filename ||= 'alien_builder.json';
   my $fh;
   open($fh, '>', $filename) || die "unable to write $filename $!";
-  print $fh encode_json({ init => $self->{init}, config => $self->{config}, class => ref($self), alien => $self->{alien} });
+  print $fh JSON::PP->new->convert_blessed(1)->encode({ init => $self->{init}, config => $self->{config}, class => ref($self), alien => $self->{alien} });
   close $fh;
   $self;
 }
@@ -1066,7 +1084,13 @@ sub restore
   $filename ||= 'alien_builder.json';
   my $fh;
   open($fh, '<', $filename) || die "unable to read $filename $!";
-  my $payload = decode_json(do { local $/; <$fh> });
+  my $payload = JSON::PP->new
+    ->filter_json_object(sub {
+      my($object) = @_;
+      my $class = delete $object->{'__CLASS__'};
+      return unless $class;
+      bless $object, $class;
+    })->decode(do { local $/; <$fh> });
   close $fh;
   __PACKAGE__->_class($payload->{class});
   my $self = $payload->{class}->new(%{ $payload->{init} });
@@ -1172,6 +1196,26 @@ sub _filter_defines
   join ' ', grep !/^-D/, shellwords($_[0]);
 }
 
+sub _load_pkgconfig
+{
+  # TODO: add test
+  my($self) = @_;
+  
+  my %pc_objects;
+  
+  File::Find::find(sub {
+    return unless /\.pc$/ && -f;
+    
+    my $filename = File::Spec->catfile($File::Find::dir, $_);
+    my $pc = Alien::Builder::PkgConfig->new($filename);
+    $pc_objects{$pc->{package}} = $pc;
+    
+  }, $self->prefix);
+  
+  $self->{config}->{pkgconfig} = \%pc_objects;
+  
+  $self;
+}
 
 $DO_SYSTEM = sub
 {

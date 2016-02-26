@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 15;
+use Test::More tests => 16;
 
 use_ok 'Alien::Builder';
 use_ok 'Alien::Builder::CommandList';
@@ -17,3 +17,4 @@ use_ok 'Alien::Builder::Interpolator::Classic';
 use_ok 'Alien::Builder::MM';
 use_ok 'Alien::Builder::Retriever';
 use_ok 'Alien::Builder::Retriever::Candidate';
+use_ok 'Alien::Builder::PkgConfig';

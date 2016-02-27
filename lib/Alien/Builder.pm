@@ -873,8 +873,8 @@ sub action_install
     local $CWD = $self->{config}->{working_dir};
     print "+ cd $CWD\n";
     $self->install_commands->execute;
-    $self->_load_pkgconfig;
-    $self->_relocation_fixup;
+    $self->_postinstall_load_pkgconfig;
+    $self->_postinstall_relocation_fixup;
   }
   unless(-d $self->prefix)
   {
@@ -1204,7 +1204,7 @@ sub _filter_defines
   join ' ', grep !/^-D/, shellwords($_[0]);
 }
 
-sub _load_pkgconfig
+sub _postinstall_load_pkgconfig
 {
   my($self) = @_;
   
@@ -1224,7 +1224,7 @@ sub _load_pkgconfig
   $self;
 }
 
-sub _relocation_fixup
+sub _postinstall_relocation_fixup
 {
   my($self) = @_;
   

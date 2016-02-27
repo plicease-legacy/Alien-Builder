@@ -10,10 +10,9 @@ Create a simple instance:
 
     my $ab = Alien::Builder->new(
       name => 'foo',
-      retreiver => [
-        'http://example.com/dist/' => {
-          pattern => qr{^libfoo-(([0-9]\.)*[0-9]+)\.tar\.gz$},
-        },
+      retreiver_start => 'http://example.com/dist',
+      retriever_spec => [
+        { pattern => qr{^libfoo-(([0-9]\.)*[0-9]+)\.tar\.gz$} },
       ],
       # these are the default command lists
       build_commands => [ '%c --prefix=%s', 'make' ],
@@ -302,15 +301,19 @@ files and header files. They both are empty by default.
 
 ## retriever
 
+The class used to do the actual retrieval.  This allows you to write your own
+custom retriever if the build in version does not provide enough functionality.
+
+## retriever\_spec
+
 An array reference that specifies the retrieval of your libraries
-archive.  Usually this is a URL, followed by a sequence of one or
-more selection specifications.  For example for a simple directory
-that contains multiple tarballs:
+archive.  This is a sequence of one or more selection specifications.
+For example for a simple directory that contains multiple tarballs:
 
     # finds the newest version of http://example.com/dist/libfoo-$VERSION.tar.gz
     my $builder = Alien::Builder->new(
-      retriever => [ 
-        'http://example.com/dist/' => 
+      retriever_start => 'http://example.com',
+      retriever_spec => [ 
         { pattern => qr{^libfoo-[0-9]+\.[0-9]+\.tar\.gz$} },
       ],
     );
@@ -320,17 +323,16 @@ extra selection specifications:
 
     # finds the newest version of http://example.com/dist/$VERSION/libfoo-$VERSION.tar.gz
     my $builder = Alien::Builder->new(
-      retriever => [ 
-        'http://example.com/dist/' => 
+      retriever_start => 'http://example.com',
+      retriever_spec => [ 
         { pattern => qr{^v[0-9]+$} },
         { pattern => qr{^libfoo-[0-9]+\.[0-9]+\.tar\.gz$} },
       ],
     );
 
-## retriever\_class
+## retriever\_start
 
-The class used to do the actual retrieval.  This allows you to write your own
-custom retriever if the build in version does not provide enough functionality.
+URL or hash reference to indicate the start of the retrieval process.
 
 ## test\_commands
 

@@ -13,6 +13,7 @@ use Text::ParseWords qw( shellwords );
 use Capture::Tiny qw( tee capture );
 use Scalar::Util qw( weaken );
 use JSON::PP;
+use URI::file;
 use 5.008001;
 
 # ABSTRACT: Base classes for Alien builder modules
@@ -26,10 +27,9 @@ Create a simple instance:
 
  my $ab = Alien::Builder->new(
    name => 'foo',
-   retreiver => [
-     'http://example.com/dist/' => {
-       pattern => qr{^libfoo-(([0-9]\.)*[0-9]+)\.tar\.gz$},
-     },
+   retreiver_start => 'http://example.com/dist',
+   retriever_spec => [
+     { pattern => qr{^libfoo-(([0-9]\.)*[0-9]+)\.tar\.gz$} },
    ],
    # these are the default command lists
    build_commands => [ '%c --prefix=%s', 'make' ],
@@ -705,15 +705,28 @@ sub build_prop_provides_libs
 
 =head2 retriever
 
+The class used to do the actual retrieval.  This allows you to write your own
+custom retriever if the build in version does not provide enough functionality.
+
+=cut
+
+sub build_prop_retriever
+{
+  my($self) = @_;
+  my $class = $self->_class($self->{init}->{retriever}, 'Alien::Builder::Retriever');
+  $class->new($self->retriever_start, @{ $self->retriever_spec });
+}
+
+=head2 retriever_spec
+
 An array reference that specifies the retrieval of your libraries
-archive.  Usually this is a URL, followed by a sequence of one or
-more selection specifications.  For example for a simple directory
-that contains multiple tarballs:
+archive.  This is a sequence of one or more selection specifications.
+For example for a simple directory that contains multiple tarballs:
 
  # finds the newest version of http://example.com/dist/libfoo-$VERSION.tar.gz
  my $builder = Alien::Builder->new(
-   retriever => [ 
-     'http://example.com/dist/' => 
+   retriever_start => 'http://example.com',
+   retriever_spec => [ 
      { pattern => qr{^libfoo-[0-9]+\.[0-9]+\.tar\.gz$} },
    ],
  );
@@ -723,8 +736,8 @@ extra selection specifications:
 
  # finds the newest version of http://example.com/dist/$VERSION/libfoo-$VERSION.tar.gz
  my $builder = Alien::Builder->new(
-   retriever => [ 
-     'http://example.com/dist/' => 
+   retriever_start => 'http://example.com',
+   retriever_spec => [ 
      { pattern => qr{^v[0-9]+$} },
      { pattern => qr{^libfoo-[0-9]+\.[0-9]+\.tar\.gz$} },
    ],
@@ -732,23 +745,25 @@ extra selection specifications:
 
 =cut
 
-sub build_prop_retriever
+sub build_prop_retriever_spec
 {
   my($self) = @_;
-  $self->retriever_class->new(@{ $self->{init}->{retriever} || [] });
+  $self->{init}->{retriever_spec} || [ { pattern => do {
+    my $name = $self->name;
+    qr{^$name-(([0-9]+\.)*[0-9]+)\.tar\.gz$},
+  } } ];
 }
 
-=head2 retriever_class
+=head2 retriever_start
 
-The class used to do the actual retrieval.  This allows you to write your own
-custom retriever if the build in version does not provide enough functionality.
+URL or hash reference to indicate the start of the retrieval process.
 
 =cut
 
-sub build_prop_retriever_class
+sub build_prop_retriever_start
 {
   my($self) = @_;
-  $self->_class($self->{init}->{retriever_class}, 'Alien::Builder::Retriever');
+  $self->{init}->{retriever_start} || URI::file->new_abs("./src");
 }
 
 =head2 test_commands

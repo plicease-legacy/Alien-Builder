@@ -568,7 +568,7 @@ subtest retriever => sub {
   };
   
   subtest 'alt class' => sub {
-    my $builder = Alien::Builder->new( retriever_class => 'My::Retriever' );
+    my $builder = Alien::Builder->new( retriever => 'My::Retriever' );
     isa_ok $builder->retriever, 'My::Retriever';
   };
 
@@ -608,8 +608,9 @@ subtest actions => sub {
   subtest 'configure' => sub {
   
     my $builder = Alien::Builder->new(
+      name => 'roger',
       build_dir => $build_dir,
-      retriever => [URI::file->new_abs('./corpus/file/repo2/')->as_string ],
+      retriever_start => URI::file->new_abs('./corpus/file/repo2/')->as_string,
       build_commands => [ [ '%X', 'build.pl' ] ],
       test_commands => [ [ '%X', 'test.pl' ] ],
       install_commands => [ [ '%X', 'install.pl', '%s' ] ],

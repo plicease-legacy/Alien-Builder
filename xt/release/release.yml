@@ -17,6 +17,27 @@ pod_spelling_system:
     - autotools
     - destdir
     - PkgConfig
+    
+    - Fandiño
+    - Flavio
+    - Kumar
+    - Mertens
+    - MidLifeXis
+    - Mithaldu
+    - Mughal
+    - Nunberg
+    - Poletti
+    - Vikas
+    - Walde
+    - Wightman
+    - Zaki
+    - mnunberg
+    - mohawk
+    - mordy
+    - polettix
+    - salva
+    - vikasnkumar
+    - zmughal
 
 pod_coverage:
   skip: 0

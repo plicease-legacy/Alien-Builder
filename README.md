@@ -532,7 +532,27 @@ available sequences are:
 
 # AUTHOR
 
-Graham Ollis &lt;plicease@cpan.org>
+Author: Graham Ollis &lt;plicease@cpan.org>
+
+Contributors:
+
+David Mertens (run4flat)
+
+Mark Nunberg (mordy, mnunberg)
+
+Christian Walde (Mithaldu)
+
+Brian Wightman (MidLifeXis)
+
+Graham Ollis (plicease)
+
+Zaki Mughal (zmughal)
+
+mohawk2
+
+Vikas N Kumar (vikasnkumar)
+
+Flavio Poletti (polettix)
 
 # COPYRIGHT AND LICENSE
 

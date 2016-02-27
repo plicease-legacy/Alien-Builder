@@ -873,6 +873,10 @@ sub action_install
     local $CWD = $self->{config}->{working_dir};
     print "+ cd $CWD\n";
     $self->install_commands->execute;
+
+#  # TODO:
+#  # - populate $builder->{config}->{pkgconfig} (see AB::MB->alien_load_pkgconfig)
+
     $self->_postinstall_load_pkgconfig;
     $self->_postinstall_relocation_fixup;
     $self->_postinstall_isolate_dynamic;
@@ -886,19 +890,6 @@ sub action_install
   $self;
 }
 
-#sub action_postinstall
-#{
-#  my($self) = @_;
-#  return unless $self->install_type eq 'share';
-#  
-#  # QUESTION:
-#  # - maybe this should be in Alien::Builder::MM instead.
-#  
-#  # TODO:
-#  # - populate $builder->{config}->{pkgconfig} (see AB::MB->alien_load_pkgconfig)
-#  
-#  # - create Alien::Foo::Install::Files.pm (here or elsewhere?)
-#}
 
 =head2 action_fake
 

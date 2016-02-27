@@ -595,6 +595,7 @@ subtest actions => sub {
 
   my $state_file = File::Spec->catfile( tempdir( CLEANUP => 1 ), 'alien_builder.json' );
   my $build_dir  = File::Spec->catdir( tempdir( CLEANUP => 1 ), '_alien' );
+  my $prefix_dir = File::Spec->catdir( tempdir( CLEANUP => 1 ), 'local' );
 
   my $dump_state = q{
     use YAML::XS qw( Dump );
@@ -611,8 +612,8 @@ subtest actions => sub {
       retriever => [URI::file->new_abs('./corpus/file/repo2/')->as_string ],
       build_commands => [ [ '%X', 'build.pl' ] ],
       test_commands => [ [ '%X', 'test.pl' ] ],
-      install_commands => [ [ '%X', 'install.pl' ] ],
-      prefix => tempdir( CLEANUP => 1 ),
+      install_commands => [ [ '%X', 'install.pl', '%s' ] ],
+      prefix => $prefix_dir,
     );
     
     $builder->save($state_file);
@@ -660,6 +661,17 @@ subtest actions => sub {
     };
   
   }
+  
+  subtest 'load_pkgconfig' => sub {
+  
+    my $builder = Alien::Builder->restore($state_file);
+    my $pkgconfig = $builder->{config}->{pkgconfig}->{roger};
+    isa_ok $pkgconfig, 'Alien::Base::PkgConfig';
+    
+    is $pkgconfig->keyword('Cflags'), '-I/opt/roger/include';
+    is $pkgconfig->keyword('Libs'), '-L/opt/roger/lib -lroger';
+  
+  };
 
   subtest 'fake' => sub {
   

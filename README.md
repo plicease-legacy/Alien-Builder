@@ -54,6 +54,15 @@ Deploy with [ExtUtils::MakeMaker](https://metacpan.org/pod/ExtUtils::MakeMaker) 
       $ab->mm_postamble;
     }
 
+Deploy with [Dist::Zilla](https://metacpan.org/pod/Dist::Zilla):
+
+    [AlienBuilder]
+    name = foo
+    retreiver = # TODO
+    build_commands = %c --prefix=%s
+    build_commands = make
+    install_commands = make install
+
 Deploy with [Module::Build](https://metacpan.org/pod/Module::Build), see [Alien::Base::ModuleBuild](https://metacpan.org/pod/Alien::Base::ModuleBuild).
 
 # DESCRIPTION

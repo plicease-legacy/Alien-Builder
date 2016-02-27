@@ -16,8 +16,6 @@ $modules{$_} = $_ for qw(
   Devel::FindPerl
   ExtUtils::MakeMaker
   FFI::CheckLib
-  File::Find
-  File::Path
   File::chdir
   HTML::Parser
   HTTP::Tiny

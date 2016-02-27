@@ -70,6 +70,15 @@ Deploy with L<ExtUtils::MakeMaker> (see L<Alien::Builder::MM> for more details):
    $ab->mm_postamble;
  }
 
+Deploy with L<Dist::Zilla>:
+
+ [AlienBuilder]
+ name = foo
+ retreiver = # TODO
+ build_commands = %c --prefix=%s
+ build_commands = make
+ install_commands = make install
+
 Deploy with L<Module::Build>, see L<Alien::Base::ModuleBuild>.
 
 =head1 DESCRIPTION

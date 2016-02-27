@@ -444,6 +444,20 @@ subtest ffi_name => sub {
     is $builder->ffi_name, 'foobar', 'default to name';
   };
 
+  subtest 'defer to pkg_config name without lib' => sub {
+    my $builder = Alien::Builder->new(
+      name => 'libfoobar',
+    );
+    is $builder->ffi_name, 'foobar', 'default to name';
+  };
+
+  subtest 'defer to pkg_config name without trailing version' => sub {
+    my $builder = Alien::Builder->new(
+      name => 'foobar-2.0',
+    );
+    is $builder->ffi_name, 'foobar', 'default to name';
+  };
+
   subtest 'override pkg_config name' => sub {
     my $builder = Alien::Builder->new(
       name => 'foobar',
@@ -451,7 +465,7 @@ subtest ffi_name => sub {
     );
     is $builder->ffi_name, 'baz', 'default to name';
   };
-
+  
 };
 
 subtest inline_auto_include => sub {

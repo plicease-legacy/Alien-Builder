@@ -499,7 +499,12 @@ sub build_prop_ffi_name
 {
   my($self) = @_;
   my $name = $self->{init}->{ffi_name};
-  $name = $self->name unless defined $name;
+  unless(defined $name)
+  {
+    $name = $self->name;
+    $name =~ s/^lib//;
+    $name =~ s/-[0-9\.]+$//;
+  }
   $name;
 }
 

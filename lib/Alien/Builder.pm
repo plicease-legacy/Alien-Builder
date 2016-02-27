@@ -874,6 +874,7 @@ sub action_install
     print "+ cd $CWD\n";
     $self->install_commands->execute;
     $self->_load_pkgconfig;
+    $self->_relocation_fixup;
   }
   unless(-d $self->prefix)
   {
@@ -895,7 +896,6 @@ sub action_install
 #  # TODO:
 #  # - touch blib/arch/auto/Alien/Foo.txt if archi = 1
 #  # - populate $builder->{config}->{pkgconfig} (see AB::MB->alien_load_pkgconfig)
-#  # - alien_relocation_fixup (for OS X)
 #  # - isolate dynamic
 #  
 #  # - create Alien::Foo::Install::Files.pm (here or elsewhere?)
@@ -1206,7 +1206,6 @@ sub _filter_defines
 
 sub _load_pkgconfig
 {
-  # TODO: add test
   my($self) = @_;
   
   my %pc_objects;
@@ -1223,6 +1222,33 @@ sub _load_pkgconfig
   $self->{config}->{pkgconfig} = \%pc_objects;
   
   $self;
+}
+
+sub _relocation_fixup
+{
+  my($self) = @_;
+  
+  # so far relocation fixup is only needed on OS X
+  return unless $^O eq 'darwin';
+  
+  File::Find::find(sub {
+    return unless /\.dylib$/;
+    
+    # save the original mode and make it writable
+    my $mode = (stat $File::Find::name)[2];
+    chmod 0755, $File::Find::name unless -w $File::Find::name;
+    
+    my @cmd = (
+      'install_name_tool',
+      '-id' => $File::Find::name,
+      $File::Find::name,
+    );
+    system @cmd;
+    
+    # restore the original permission mode
+    chmod $mode, $File::Find::name;
+  
+  }, $self->prefix);
 }
 
 $DO_SYSTEM = sub

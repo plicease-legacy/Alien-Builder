@@ -1158,7 +1158,7 @@ sub build_prop_install_type
       return $self->{config}->{install_type} = 'share';
     }
   
-    die "TODO message";
+    die "you requested a system install type, but the required package was not found.";
   };
 }
 

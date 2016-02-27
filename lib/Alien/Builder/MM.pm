@@ -96,18 +96,35 @@ sub action_install
   my($self) = @_;
   $self->SUPER::action_install;
   
+  my $dist_name = $self->_mm_dist_name;
+  
   if($self->arch)
   {
-    my @name = split /-/, $self->_mm_dist_name;
+    my @name = split /-/, $dist_name;
     my $dir = File::Spec->catdir  (qw( blib arch auto ), @name);
     my $file = File::Spec->catfile($dir, $name[-1].'.txt');
     
-    File::Path::mkpath($dir, 0, 0755) unless -d $dir;
+    File::Path::mkpath($dir, { verbose => 0 }) unless -d $dir;
     open my $fh, '>', $file;
     print $fh "Alien based distribution with architecture specific file in share\n";
     close $fh;
     
   }
+
+  my $dir  = File::Spec->catdir(qw( blib lib ), split /-/, "$dist_name-Install");
+  my $file = File::Spec->catfile($dir, 'Files.pm');
+  my $package = "$dist_name";
+  $package =~ s/-/::/g;
+  File::Path::mkpath($dir, { verbose => 0 }) unless -d $dir;
+  open my $fh, '>', $file;
+  print $fh <<EOF;
+package $package\::Install::Files;
+require $package;
+sub Inline { shift; $package->Inline(\@_) }
+1;
+EOF
+  print $fh "=begin Pod::Coverage\n\n  Inline\n\n=end Pod::Coverage\n";
+  close $fh;
   
   $self;
 }

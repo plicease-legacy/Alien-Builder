@@ -886,6 +886,7 @@ sub action_install
     require File::Path;
     File::Path::mkpath($self->prefix, 0, 0755);
   }
+  $self->{config}->{finished_installing} = 1;
   $self->save(File::Spec->catfile($self->prefix, 'alien_builder.json'));
   $self;
 }

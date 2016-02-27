@@ -123,7 +123,7 @@ require $package;
 sub Inline { shift; $package->Inline(\@_) }
 1;
 EOF
-  print $fh "=begin Pod::Coverage\n\n  Inline\n\n=end Pod::Coverage\n";
+  print $fh "\n=begin Pod::Coverage\n\n  Inline\n\n=end Pod::Coverage\n\n=cut\n";
   close $fh;
   
   $self;

@@ -895,7 +895,6 @@ sub action_install
 #  # - maybe this should be in Alien::Builder::MM instead.
 #  
 #  # TODO:
-#  # - touch blib/arch/auto/Alien/Foo.txt if archi = 1
 #  # - populate $builder->{config}->{pkgconfig} (see AB::MB->alien_load_pkgconfig)
 #  
 #  # - create Alien::Foo::Install::Files.pm (here or elsewhere?)
@@ -1226,6 +1225,9 @@ sub _postinstall_load_pkgconfig
   $self;
 }
 
+# this is in the wrong place.  The fixup needs to be made
+# once the files have been copied to their final location
+# I think... no relocatable dirs supported then.
 sub _postinstall_relocation_fixup
 {
   my($self) = @_;

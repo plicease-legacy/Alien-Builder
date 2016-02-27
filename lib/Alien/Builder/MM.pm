@@ -5,6 +5,8 @@ use warnings;
 use Carp qw( croak );
 use Storable qw( dclone );
 use File::Spec;
+use File::Basename ();
+use File::Path ();
 use base qw( Alien::Builder );
 
 # ABSTRACT: Alien::Builder subclass for ExtUtils::MakeMaker
@@ -83,6 +85,38 @@ sub mm_postamble
   $postamble .= "$state_dir :\n\t\$(MKPATH) $state_dir\n";
   
   $postamble;
+}
+
+=head2 action_install
+
+=cut
+
+sub action_install
+{
+  my($self) = @_;
+  $self->SUPER::action_install;
+  
+  if($self->arch)
+  {
+    my @name = split /-/, $self->_mm_dist_name;
+    my $dir = File::Spec->catdir  (qw( blib arch auto ), @name);
+    my $file = File::Spec->catfile($dir, $name[-1].'.txt');
+    
+    File::Path::mkpath($dir, 0, 0755) unless -d $dir;
+    open my $fh, '>', $file;
+    print $fh "Alien based distribution with architecture specific file in share\n";
+    close $fh;
+    
+  }
+  
+  $self;
+}
+
+sub _mm_dist_name
+{
+  my($self) = @_;
+  my @dirs = File::Spec->splitdir((File::Spec->splitpath($self->prefix, 1))[1]);
+  my $dist_name = $dirs[-1];
 }
 
 sub import

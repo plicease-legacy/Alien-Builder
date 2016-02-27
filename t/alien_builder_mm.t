@@ -16,4 +16,5 @@ subtest basic => sub {
   my %config = $builder->mm_args;
   is $config{PREREQ_PM}->{"File::ShareDir"}, "1.00", 'require File::ShsreDir = 1.00';
 
+  is $builder->_mm_dist_name, 'Alien-foo', '_mm_dist_name = Alien-foo';
 };

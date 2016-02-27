@@ -74,13 +74,14 @@ sub mm_postamble
   
     $postamble .= "$flag:\n" .
     "\t\$(FULLPERL) -Iinc -MAlien::Builder::MM=cmds -e $action\n" .
-    "\t\$(TOUCH) $flag\n";
+    "\t\$(NOECHO) \$(TOUCH) $flag\n";
     
     $last_target = $action;
   }
   
-  $postamble .= "\n\nrealclean purge :: alien_clean\n";
-  $postamble .= "alien_clean:\n\t\$(RM_RF) $build_dir\n\t\$(RM_F) alien_builder.json\n";
+  $postamble .= "\n\nrealclean purge :: alien_realclean\n";
+  $postamble .= "alien_clean:\n\t\$(RM_RF) $build_dir\n";
+  $postamble .= "alien_realclean: alien_clean\n\t\$(RM_F) alien_builder.json\n";
   $postamble .= "pure_all :: alien_install\n";
   $postamble .= "$state_dir :\n\t\$(MKPATH) $state_dir\n";
   

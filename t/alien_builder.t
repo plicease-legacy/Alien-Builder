@@ -492,12 +492,16 @@ subtest 'provides cflags libs' => sub {
     my $builder = Alien::Builder->new;
     is $builder->provides_cflags, undef, 'cflags undef';
     is $builder->provides_libs, undef, 'libs undef';
+    is $builder->{config}->{system_provides}->{Cflags}, undef;
+    is $builder->{config}->{system_provides}->{Libs}, undef;
   };
   
   subtest 'with values' => sub {
     my $builder = Alien::Builder->new( provides_cflags => '-DFOO', provides_libs => '-lfoo' );
     is $builder->provides_cflags, '-DFOO', 'cflags undef';
     is $builder->provides_libs, '-lfoo', 'libs undef';
+    is $builder->{config}->{system_provides}->{Cflags}, '-DFOO';
+    is $builder->{config}->{system_provides}->{Libs}, '-lfoo';
   };
 
 };

@@ -166,6 +166,14 @@ sub new
     }
   }
 
+  if(defined $self->provides_cflags || defined defined $self->provides_libs)
+  {
+    my %provides;
+    $provides{Cflags} = $self->provides_cflags if defined $self->provides_cflags;
+    $provides{Libs}   = $self->provides_libs   if defined $self->provides_libs;
+    $self->{config}->{system_provides} = \%provides;
+  }
+
   $self;
 }
 

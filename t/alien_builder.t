@@ -672,6 +672,18 @@ subtest actions => sub {
     is $pkgconfig->keyword('Libs'), '-L/opt/roger/lib -lroger';
   
   };
+  
+  subtest 'isolate dynamic' => sub {
+
+    my $libroger_so = File::Spec->catfile($prefix_dir, 'dynamic', 'libroger.so');
+    my $libroger_a  = File::Spec->catfile($prefix_dir, 'lib',     'libroger.a');
+    
+    ok -f $libroger_so, "so = $libroger_so";
+    ok -f $libroger_a,  "a  = $libroger_a";
+
+    note `ls -lR $prefix_dir`;
+  
+  };
 
   subtest 'fake' => sub {
   
@@ -682,7 +694,7 @@ subtest actions => sub {
     is $err, '', 'did not throw exception';
   };
 
-  eval $dump_state;
+  #eval $dump_state;
 };
 
 subtest prefix => sub {

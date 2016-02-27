@@ -875,6 +875,7 @@ sub action_install
     $self->install_commands->execute;
     $self->_postinstall_load_pkgconfig;
     $self->_postinstall_relocation_fixup;
+    $self->_postinstall_isolate_dynamic;
   }
   unless(-d $self->prefix)
   {
@@ -896,7 +897,6 @@ sub action_install
 #  # TODO:
 #  # - touch blib/arch/auto/Alien/Foo.txt if archi = 1
 #  # - populate $builder->{config}->{pkgconfig} (see AB::MB->alien_load_pkgconfig)
-#  # - isolate dynamic
 #  
 #  # - create Alien::Foo::Install::Files.pm (here or elsewhere?)
 #}
@@ -992,6 +992,8 @@ provide an implementation for this method.
 sub alien_check_built_version
 {
   my($self) = @_;
+  # TODO: actually use this (?) it isn't actually being called ever yet.
+  #       though I am not entirely sure it needs to be.
   # TODO: try to get the version number from pkgconfig
   # TODO: try to determine version number from directory (foo-1.00 should imply version 1.00)
   # TODO: populate $builder->{config}->{version};
@@ -1249,6 +1251,30 @@ sub _postinstall_relocation_fixup
     chmod $mode, $File::Find::name;
   
   }, $self->prefix);
+}
+
+sub _postinstall_isolate_dynamic
+{
+  my($self) = @_;
+  
+  local $CWD = $self->prefix;
+  
+  mkdir 'dynamic' unless -d 'dynamic';
+  foreach my $dir (qw( bin lib ))
+  {
+    next unless -d $dir;
+    opendir(my $dh, $dir);
+    my @dlls = grep { /\.so/ || /\.(dylib|bundle|la|dll|dll\.a)$/ } grep !/^\./, readdir $dh;
+    closedir $dh;
+    foreach my $dll (@dlls)
+    {
+      require File::Copy;
+      my $from = File::Spec->catfile($dir, $dll);
+      my $to   = File::Spec->catfile('dynamic', $dll);
+      unlink $to if -e $to;
+      File::Copy::move($from, $to);
+    }
+  }
 }
 
 $DO_SYSTEM = sub

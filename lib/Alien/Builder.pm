@@ -403,8 +403,6 @@ sub build_prop_env
   
     if ($mod eq 'Alien::MSYS') {
       $path{Alien::MSYS->msys_path} = 1;
-    } elsif ($mod eq 'Alien::CMake') {
-      Alien::CMake->set_path;
     } elsif ($mod eq 'Alien::TinyCC') {
       $path{Alien::TinyCC->path_to_tcc} = 1;
     } elsif ($mod eq 'Alien::Autotools') {

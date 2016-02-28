@@ -26,7 +26,7 @@ sub new
   my %vars = %{ $args{vars} || {} }; # copy;
 
   # handled here:
-  # %p  (TODO: deprecated)
+  # %p  ( './' or '' )
   # %x  ( perl exe )
   # %X  ( perl exe  for win )
   # handled else where:

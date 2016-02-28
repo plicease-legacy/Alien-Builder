@@ -294,9 +294,6 @@ subtest 'env' => sub {
       };
     }
     
-    # TODO: support Alien::CMake
-    # probably by just adding bin_dir interface
-    
     subtest 'Alien::Bogus' => sub {
     
       my $builder = Alien::Builder->new( bin_requires => { 'Alien::Bogus' => 0 } );

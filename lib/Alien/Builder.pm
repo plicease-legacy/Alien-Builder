@@ -1049,6 +1049,7 @@ sub alien_do_system
   }
   
   my $verbose = $VERBOSE || $opts->{verbose};
+  $verbose = 1 unless defined $verbose;
   
   # prevent build process from cwd-ing from underneath us
   local $CWD;

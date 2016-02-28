@@ -74,7 +74,8 @@ Deploy with L<Dist::Zilla>:
 
  [AlienBuilder]
  name = foo
- retreiver = # TODO
+ retreiver_start = http://ftp.example.com/dist/
+ retriever_spec.0.pattern = ^foo-(([0-9]+\.)*[0-9]+)\.tar\.gz$
  build_commands = %c --prefix=%s
  build_commands = make
  install_commands = make install
@@ -119,9 +120,6 @@ sub new
 {
   my($class, %args) = @_;  
 
-  # TODO
-  # this doesn't allow for defining properties in a subclass
-  # which we will eventually want to support.
   foreach my $prop (grep s/^build_prop_//, keys %Alien::Builder::)
   {
     next if __PACKAGE__->can($prop);
@@ -897,10 +895,6 @@ sub action_install
     local $CWD = $self->{config}->{working_dir};
     print "+ cd $CWD\n";
     $self->install_commands->execute;
-
-#  # TODO:
-#  # - populate $builder->{config}->{pkgconfig} (see AB::MB->alien_load_pkgconfig)
-
     $self->_postinstall_load_pkgconfig;
     $self->_postinstall_relocation_fixup;
     $self->_postinstall_isolate_dynamic;
@@ -1007,11 +1001,6 @@ provide an implementation for this method.
 sub alien_check_built_version
 {
   my($self) = @_;
-  # TODO: actually use this (?) it isn't actually being called ever yet.
-  #       though I am not entirely sure it needs to be.
-  # TODO: try to get the version number from pkgconfig
-  # TODO: try to determine version number from directory (foo-1.00 should imply version 1.00)
-  # TODO: populate $builder->{config}->{version};
   return;
 }
 

@@ -57,7 +57,8 @@ Deploy with [Dist::Zilla](https://metacpan.org/pod/Dist::Zilla):
 
     [AlienBuilder]
     name = foo
-    retreiver = # TODO
+    retreiver_start = http://ftp.example.com/dist/
+    retriever_spec.0.pattern = ^foo-(([0-9]+\.)*[0-9]+)\.tar\.gz$
     build_commands = %c --prefix=%s
     build_commands = make
     install_commands = make install

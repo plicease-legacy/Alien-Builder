@@ -449,7 +449,7 @@ Saves the state information of that [Alien::Builder](https://metacpan.org/pod/Al
 
 ## restore
 
-    Alien::Builder->restore;
+    my $builder = Alien::Builder->restore;
 
 Restores an [Alien::Builder](https://metacpan.org/pod/Alien::Builder) instance from the state information saved by ["save"](#save).
 

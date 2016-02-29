@@ -1093,7 +1093,7 @@ sub save
 
 =head2 restore
 
- Alien::Builder->restore;
+ my $builder = Alien::Builder->restore;
 
 Restores an L<Alien::Builder> instance from the state information saved by L</save>.
 

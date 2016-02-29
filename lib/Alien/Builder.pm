@@ -1263,6 +1263,8 @@ sub _postinstall_isolate_dynamic
 {
   my($self) = @_;
   
+  return unless $self->isolate_dynamic;
+  
   local $CWD = $self->prefix;
   
   mkdir 'dynamic' unless -d 'dynamic';

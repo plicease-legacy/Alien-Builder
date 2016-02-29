@@ -143,11 +143,27 @@ sub new
     config => {},
   }, $class;
 
-  $self->{config}->{inline_auto_include} = $self->inline_auto_include;
-  $self->{config}->{name}                = $self->name;
-  $self->{config}->{ffi_name}            = $self->ffi_name;
-  $self->{config}->{msys}                = $self->msys;
-  $self->{config}->{original_prefix}     = $self->prefix;
+  if(my $config = delete $args{_config})
+  {
+    $self->{config} = $config;
+  }
+  else
+  {
+    $self->{config}->{inline_auto_include} = $self->inline_auto_include;
+    $self->{config}->{name}                = $self->name;
+    $self->{config}->{ffi_name}            = $self->ffi_name;
+    $self->{config}->{msys}                = $self->msys;
+    $self->{config}->{original_prefix}     = $self->prefix;
+
+    if(defined $self->provides_cflags || defined defined $self->provides_libs)
+    {
+      my %provides;
+      $provides{Cflags} = $self->provides_cflags if defined $self->provides_cflags;
+      $provides{Libs}   = $self->provides_libs   if defined $self->provides_libs;
+      $self->{config}->{system_provides} = \%provides;
+    }
+
+  }
 
   if($self->install_type eq 'share')
   {
@@ -171,14 +187,6 @@ sub new
       }
       $self->{build_requires}->{$tool} = $version;
     }
-  }
-
-  if(defined $self->provides_cflags || defined defined $self->provides_libs)
-  {
-    my %provides;
-    $provides{Cflags} = $self->provides_cflags if defined $self->provides_cflags;
-    $provides{Libs}   = $self->provides_libs   if defined $self->provides_libs;
-    $self->{config}->{system_provides} = \%provides;
   }
 
   $self;
@@ -1106,8 +1114,7 @@ sub restore
     })->decode(do { local $/; <$fh> });
   close $fh;
   __PACKAGE__->_class($payload->{class});
-  my $self = $payload->{class}->new(%{ $payload->{init} });
-  $self->{config} = $payload->{config};
+  my $self = $payload->{class}->new(%{ $payload->{init} }, _config => $payload->{config});
   $self;
 }
 

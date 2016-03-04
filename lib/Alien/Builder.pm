@@ -177,6 +177,8 @@ sub new
       # TODO: which version is best?
       $self->{build_requires}->{'File::Copy::Recursive'} = 0;
     }
+    
+    $self->{build_requires}->{'HTML::Parser'} = 0;
   
     foreach my $tool (keys %{ $self->bin_requires })
     {

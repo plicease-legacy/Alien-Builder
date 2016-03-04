@@ -15,6 +15,8 @@ use HTTP::Tiny;
 plan skip_all => 'test requires Perl 5.10 or better' if $] < 5.010;
 plan skip_all => 'live test, set ALIEN_BUILDER_LIVE_TEST'
   unless $ENV{ALIEN_BUILDER_LIVE_TEST};
+plan skip_all => 'test requires HTML::Parser'
+  unless eval q{ require HTML::Parser; 1 };
 my($port) = split /:/, $ENV{ALIEN_BUILDER_LIVE_TEST};
 
 plan tests => 3;

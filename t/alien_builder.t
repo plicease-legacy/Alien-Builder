@@ -733,6 +733,16 @@ subtest destdir => sub {
 
 };
 
+subtest 'HTML::Parser a build require on share install' => sub {
+
+  local %ENV = %ENV;
+  $ENV{ALIEN_INSTALL_TYPE} = 'share';
+  
+  my $builder = Alien::Builder->new;
+  is $builder->alien_build_requires->{'HTML::Parser'}, 0;
+
+};
+
 done_testing;
 
 package

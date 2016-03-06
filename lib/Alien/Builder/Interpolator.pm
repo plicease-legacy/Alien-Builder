@@ -45,11 +45,35 @@ sub _sub
 {
   my($self, $key) = @_;
   $key =~ /^\{(.*)\}$/
-    ? $self->_execute_helper($1)
+    ? $self->execute_helper($1)
     : $self->{vars}->{$key};
 }
 
-sub _execute_helper
+sub vars { shift->{vars} }
+sub helpers { shift->{helpers} }
+
+=head1 METHODS
+
+=head2 interpolate
+
+ my $string = $itr->interpolate($template);
+
+=cut
+
+sub interpolate
+{
+  my($self, $string) = @_;
+  $string =~ s/\%(\{[a-zA-Z_][a-zA-Z_0-9]+\}|.)/$self->_sub($1)/eg if defined $string;
+  $string;
+}
+
+=head2 execute_helper
+
+ my $string = $iter->execute_helper($helper);
+
+=cut
+
+sub execute_helper
 {
   my($self, $name) = @_;
   my $code = $self->{helpers}->{$name};
@@ -66,21 +90,6 @@ sub _execute_helper
   }
   
   $code->();
-}
-
-=head1 METHODS
-
-=head2 interpolate
-
- my $string = $itr->interpolate($template);
-
-=cut
-
-sub interpolate
-{
-  my($self, $string) = @_;
-  $string =~ s/\%(\{[a-zA-Z_][a-zA-Z_0-9]+\}|.)/$self->_sub($1)/eg if defined $string;
-  $string;
 }
 
 1;

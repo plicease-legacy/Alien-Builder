@@ -3,6 +3,7 @@ sudo: false
 
 install:
   - perlbrew list
+  - cp dist.ini.meta dist.ini
   - (dzil authordeps --missing | cpanm -n) || true
   - dzil listdeps   --missing | cpanm -n
   - perl corpus/server.pl
